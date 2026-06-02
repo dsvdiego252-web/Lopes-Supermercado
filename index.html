@@ -291,25 +291,9 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
       <div style="height:200px;position:relative"><canvas id="ch-com-vcxc-evo"></canvas></div>
     </div>
   </div>
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#f5a623"></div>Vendas x Compras — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-com-vcxc"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#66bb6a"></div>Vendas x Compras — Evolução Mensal</div>
-      <div style="height:190px;position:relative"><canvas id="ch-com-vcxc-evo"></canvas></div>
-    </div>
+  
   </div>
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#f5a623"></div>Vendas x Compras — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-com-vcxc"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#66bb6a"></div>Vendas x Compras — Evolução Mensal</div>
-      <div style="height:190px;position:relative"><canvas id="ch-com-vcxc-evo"></canvas></div>
-    </div>
+  
   </div>
   <div class="slbl">Detalhamento por Empresa</div>
   <div class="tcard"><div class="tscroll"><table>
@@ -334,8 +318,10 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
       <div><div class="saldo-lbl">Total Débito ICMS</div>
         <div class="saldo-val s-deb" id="i-deb-total">—</div>
         <div class="saldo-sub">saídas + transf.</div></div>
-  <!-- Linha: PRODUCAO Saldo + ICMS-ST + Consolidado -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:18px" id="icms-prod-row">
+  
+    </div>
+  <!-- KPIs PRODUCAO: Saldo Acumulado + ICMS-ST + Consolidado -->
+  <div id="icms-prod-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:18px">
     <div class="saldo" style="border-color:rgba(245,166,35,.3)">
       <div class="saldo-ico">🏭</div>
       <div>
@@ -359,81 +345,6 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
         <div class="saldo-val" id="i-saldo-consol">—</div>
         <div class="saldo-sub" id="i-saldo-consol-sub">lojas + ST produção</div>
       </div>
-    </div>
-  </div></div>
-    <div class="saldo"><div class="saldo-ico">📥</div>
-      <div><div class="saldo-lbl">Total Crédito ICMS</div>
-        <div class="saldo-val s-cred" id="i-cred-total">—</div>
-        <div class="saldo-sub">compras + outros</div></div></div>
-    <div class="saldo"><div class="saldo-ico">⚖️</div>
-      <div><div class="saldo-lbl">Saldo ICMS</div>
-        <div class="saldo-val" id="i-saldo">—</div>
-        <div class="saldo-sub" id="i-saldo-sub">—</div></div></div>
-  </div>
-  <!-- Linha extra: PRODUCAO + ICMS-ST -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:18px" id="icms-prod-row">
-    <div class="saldo" style="border-color:rgba(245,166,35,.3)">
-      <div class="saldo-ico">🏭</div>
-      <div>
-        <div class="saldo-lbl">Saldo Acumulado — Produção</div>
-        <div class="saldo-val" id="i-prod-saldo">—</div>
-        <div class="saldo-sub" id="i-prod-saldo-sub">crédito acumulado</div>
-      </div>
-    </div>
-    <div class="saldo" style="border-color:rgba(245,166,35,.3)">
-      <div class="saldo-ico">🧾</div>
-      <div>
-        <div class="saldo-lbl">ICMS-ST a Recolher — Produção</div>
-        <div class="saldo-val s-deb" id="i-prod-st">—</div>
-        <div class="saldo-sub">sempre recolhido</div>
-      </div>
-    </div>
-    <div class="saldo" style="border-color:rgba(79,195,247,.3)">
-      <div class="saldo-ico">📊</div>
-      <div>
-        <div class="saldo-lbl">ICMS Total a Recolher (Consolidado)</div>
-        <div class="saldo-val s-pos" id="i-saldo-consol">—</div>
-        <div class="saldo-sub" id="i-saldo-consol-sub">lojas + ST produção</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="slbl">Vendas — Composição ICMS</div>
-  <div class="kpi-grid g5">
-    <div class="kpi clickable" style="--kc:#f5a623" id="kpi-i-vtotal" onclick="setFiltro('icms','venda_bruta',this)">
-      <span class="kpi-var" id="var-i-vtotal"></span><span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Vendas Total</div>
-      <div class="kpi-val" id="i-venda-total">—</div>
-      <div class="kpi-sub">bruto</div>
-      <canvas class="kpi-spark" id="sp-i-vtotal"></canvas>
-    </div>
-    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-i-vtrib" onclick="setFiltro('icms','venda_trib',this)">
-      <span class="kpi-var" id="var-i-vtrib"></span><span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Vendas Tributadas</div>
-      <div class="kpi-val" id="i-venda-trib">—</div>
-      <div class="kpi-sub"><span id="i-vtrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> ICMS normal</div>
-      <canvas class="kpi-spark" id="sp-i-vtrib"></canvas>
-    </div>
-    <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-i-vst" onclick="setFiltro('icms','venda_st',this)">
-      <span class="kpi-var" id="var-i-vst"></span><span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Vendas ST</div>
-      <div class="kpi-val" id="i-venda-st">—</div>
-      <div class="kpi-sub"><span id="i-vst-pct" style="font-family:var(--fm);font-size:10px;color:#ab47bc"></span> subst. tributária</div>
-      <canvas class="kpi-spark" id="sp-i-vst"></canvas>
-    </div>
-    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-i-visen" onclick="setFiltro('icms','venda_isenta',this)">
-      <span class="kpi-var" id="var-i-visen"></span><span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Vendas Isentas</div>
-      <div class="kpi-val" id="i-venda-isenta">—</div>
-      <div class="kpi-sub"><span id="i-visen-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> isenções fiscais</div>
-      <canvas class="kpi-spark" id="sp-i-visen"></canvas>
-    </div>
-    <div class="kpi clickable" style="--kc:#ef5350" id="kpi-i-debvendas" onclick="setFiltro('icms','deb_icms_vendas',this)">
-      <span class="kpi-var" id="var-i-debvendas"></span><span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Débito s/ Vendas</div>
-      <div class="kpi-val" id="i-deb-vendas">—</div>
-      <div class="kpi-sub">ICMS gerado nas saídas</div>
-      <canvas class="kpi-spark" id="sp-i-debvendas"></canvas>
     </div>
   </div>
 
@@ -501,25 +412,9 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
     </div>
   </div>
 
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. ICMS — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-icms-vtxct"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. ICMS — Evolução</div>
-      <div style="height:190px;position:relative"><canvas id="ch-icms-vtxct-evo"></canvas></div>
-    </div>
+  
   </div>
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. ICMS — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-icms-vtxct"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. ICMS — Evolução</div>
-      <div style="height:190px;position:relative"><canvas id="ch-icms-vtxct-evo"></canvas></div>
-    </div>
+  
   </div>
   <div class="slbl">Débito ICMS — por Empresa</div>
   <div class="tcard"><div class="tscroll"><table>
@@ -645,25 +540,9 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
       <div style="height:190px;position:relative"><canvas id="ch-pis-vtxct-evo"></canvas></div>
     </div>
   </div>
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. PIS/Cofins — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-pis-vtxct"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. PIS/Cofins — Evolução</div>
-      <div style="height:190px;position:relative"><canvas id="ch-pis-vtxct-evo"></canvas></div>
-    </div>
+  
   </div>
-  <div class="charts-row">
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. PIS/Cofins — por Empresa</div>
-      <div style="height:190px;position:relative"><canvas id="ch-pis-vtxct"></canvas></div>
-    </div>
-    <div class="chart-card" style="flex:1">
-      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div>Vendas Trib. x Compras Trib. PIS/Cofins — Evolução</div>
-      <div style="height:190px;position:relative"><canvas id="ch-pis-vtxct-evo"></canvas></div>
-    </div>
+  
   </div>
   <div class="slbl">Débito PIS/Cofins — por Empresa</div>
   <div class="tcard"><div class="tscroll"><table>
