@@ -324,27 +324,24 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
       <canvas class="kpi-spark" id="sp-i-vtotal"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-i-vtrib" onclick="setFiltro('icms','venda_trib',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#4fc3f7" id="i-vtrib-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-vtrib"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Vendas Tributadas</div>
       <div class="kpi-val" id="i-venda-trib">—</div>
-      <div class="kpi-sub">ICMS normal</div>
+      <div class="kpi-sub"><span id="i-vtrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> ICMS normal</div>
       <canvas class="kpi-spark" id="sp-i-vtrib"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-i-vst" onclick="setFiltro('icms','venda_st',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#ab47bc" id="i-vst-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-vst"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Vendas ST</div>
       <div class="kpi-val" id="i-venda-st">—</div>
-      <div class="kpi-sub">subst. tributária</div>
+      <div class="kpi-sub"><span id="i-vst-pct" style="font-family:var(--fm);font-size:10px;color:#ab47bc"></span> subst. tributária</div>
       <canvas class="kpi-spark" id="sp-i-vst"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-i-visen" onclick="setFiltro('icms','venda_isenta',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#66bb6a" id="i-visen-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-visen"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Vendas Isentas</div>
       <div class="kpi-val" id="i-venda-isenta">—</div>
-      <div class="kpi-sub">isenções fiscais</div>
+      <div class="kpi-sub"><span id="i-visen-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> isenções fiscais</div>
       <canvas class="kpi-spark" id="sp-i-visen"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#ef5350" id="kpi-i-debvendas" onclick="setFiltro('icms','deb_icms_vendas',this)">
@@ -366,27 +363,24 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
       <canvas class="kpi-spark" id="sp-i-ctotal"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-i-ctrib" onclick="setFiltro('icms','compras_trib',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#4fc3f7" id="i-ctrib-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-ctrib"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Compras Tributadas</div>
       <div class="kpi-val" id="i-comp-trib">—</div>
-      <div class="kpi-sub">ICMS normal</div>
+      <div class="kpi-sub"><span id="i-ctrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> ICMS normal</div>
       <canvas class="kpi-spark" id="sp-i-ctrib"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-i-cst" onclick="setFiltro('icms','compras_st',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#ab47bc" id="i-cst-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-cst"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Compras ST</div>
       <div class="kpi-val" id="i-comp-st">—</div>
-      <div class="kpi-sub">subst. tributária</div>
+      <div class="kpi-sub"><span id="i-cst-pct" style="font-family:var(--fm);font-size:10px;color:#ab47bc"></span> subst. tributária</div>
       <canvas class="kpi-spark" id="sp-i-cst"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-i-cisen" onclick="setFiltro('icms','compras_isentas',this)">
-      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#66bb6a" id="i-cisen-pct"></span>
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-i-cisen"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Compras Isentas</div>
       <div class="kpi-val" id="i-comp-isen">—</div>
-      <div class="kpi-sub">produtos isentos</div>
+      <div class="kpi-sub"><span id="i-cisen-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> produtos isentos</div>
       <canvas class="kpi-spark" id="sp-i-cisen"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#26c6da" id="kpi-i-credcomp" onclick="setFiltro('icms','cred_icms_compras',this)">
@@ -454,17 +448,17 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
   <div class="slbl">Vendas — Base de Cálculo PIS/Cofins</div>
   <div class="kpi-grid g4">
     <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-p-vtrib" onclick="setFiltro('pis','venda_trib_pis',this)">
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-p-vtrib"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Vendas Tributadas PIS/Cofins</div>
       <div class="kpi-val" id="p-venda-trib">—</div>
-      <div class="kpi-sub">base de cálculo</div>
+      <div class="kpi-sub"><span id="p-vtrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> base de cálculo</div>
       <canvas class="kpi-spark" id="sp-p-vtrib"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-p-vzero" onclick="setFiltro('pis','venda_aliq_zero',this)">
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-p-vzero"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Vendas Alíquota Zero</div>
       <div class="kpi-val" id="p-venda-zero">—</div>
-      <div class="kpi-sub">monofásicos / cesta</div>
+      <div class="kpi-sub"><span id="p-vzero-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> monofásicos / cesta</div>
       <canvas class="kpi-spark" id="sp-p-vzero"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#f5a623" id="kpi-p-deb" onclick="setFiltro('pis','total_deb_pis',this)">
@@ -485,31 +479,31 @@ tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-s
   <div class="slbl">Compras — Crédito PIS/Cofins</div>
   <div class="kpi-grid g4">
     <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-p-ctrib" onclick="setFiltro('pis','compras_trib_pis',this)">
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-p-ctrib"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Compras Tributadas PIS/Cofins</div>
       <div class="kpi-val" id="p-comp-trib">—</div>
-      <div class="kpi-sub">base de crédito</div>
+      <div class="kpi-sub"><span id="p-ctrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> base de crédito</div>
       <canvas class="kpi-spark" id="sp-p-ctrib"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#26c6da" id="kpi-p-bcomp" onclick="setFiltro('pis','base_comp_pis',this)">
-      <span class="kpi-active-dot">● ativo</span>
+      <span class="kpi-var" id="var-p-bcomp"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Base Crédito PIS/Cofins</div>
       <div class="kpi-val" id="p-base-comp">—</div>
-      <div class="kpi-sub">valor base após deduções</div>
+      <div class="kpi-sub"><span id="p-bcomp-pct" style="font-family:var(--fm);font-size:10px;color:#26c6da"></span> valor base após deduções</div>
       <canvas class="kpi-spark" id="sp-p-bcomp"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-p-credcomp" onclick="setFiltro('pis','cred_pis_compra',this)">
       <span class="kpi-var" id="var-p-credcomp"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Crédito s/ Compras PIS/Cofins</div>
       <div class="kpi-val" id="p-cred-compra">—</div>
-      <div class="kpi-sub">PIS + Cofins creditados</div>
+      <div class="kpi-sub"><span id="p-credcomp2-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> PIS + Cofins creditados</div>
       <canvas class="kpi-spark" id="sp-p-credcomp"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#3ecf8e" id="kpi-p-credtotal" onclick="setFiltro('pis','total_cred_pis',this)">
       <span class="kpi-var" id="var-p-credtotal"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Total Crédito PIS/Cofins</div>
       <div class="kpi-val" id="p-cred-total-kpi">—</div>
-      <div class="kpi-sub">crédito total apurado</div>
+      <div class="kpi-sub"><span id="p-credtotal2-pct" style="font-family:var(--fm);font-size:10px;color:#3ecf8e"></span> crédito total apurado</div>
       <canvas class="kpi-spark" id="sp-p-credtotal"></canvas>
     </div>
   </div>
@@ -978,20 +972,25 @@ function renderICMS(){
   sparkline('sp-i-cisen',scis,'rgb(102,187,106)',LABELS);sparkline('sp-i-credcomp',scc,'rgb(38,198,218)',LABELS);
   varBadge('var-i-vtotal',sv);varBadge('var-i-debvendas',sdv,true);
   varBadge('var-i-ctotal',sct);varBadge('var-i-credcomp',scc);
+  // varBadge para KPIs com pct
+  varBadge('var-i-vtrib',svt);varBadge('var-i-vst',svs);varBadge('var-i-visen',svi);
+  varBadge('var-i-ctrib',sctrib);varBadge('var-i-cst',scst);varBadge('var-i-cisen',scis);
 
   // KPIs vendas
   set('i-venda-total',BRL(d.venda_bruta));set('i-venda-trib',BRL(d.venda_trib));
   set('i-venda-st',BRL(d.venda_st));set('i-venda-isenta',BRL(d.venda_isenta));
   set('i-deb-vendas',BRL(d.deb_icms_vendas));
-  set('i-vtrib-pct',PCT(d.venda_trib,d.venda_bruta));set('i-vst-pct',PCT(d.venda_st,d.venda_bruta));
-  set('i-visen-pct',PCT(d.venda_isenta,d.venda_bruta));
+  set('i-vtrib-pct', PCT(d.venda_trib,d.venda_bruta)+' do total');
+  set('i-vst-pct',   PCT(d.venda_st,d.venda_bruta)+' do total');
+  set('i-visen-pct', PCT(d.venda_isenta,d.venda_bruta)+' do total');
 
   // KPIs compras
   set('i-comp-total',BRL(d.compras_bruto));set('i-comp-trib',BRL(d.compras_trib));
   set('i-comp-st',BRL(d.compras_st));set('i-comp-isen',BRL(d.compras_isentas));
   set('i-cred-compras',BRL(d.cred_icms_compras));
-  set('i-ctrib-pct',PCT(d.compras_trib,d.compras_bruto));set('i-cst-pct',PCT(d.compras_st,d.compras_bruto));
-  set('i-cisen-pct',PCT(d.compras_isentas,d.compras_bruto));
+  set('i-ctrib-pct', PCT(d.compras_trib,d.compras_bruto)+' do total');
+  set('i-cst-pct',   PCT(d.compras_st,d.compras_bruto)+' do total');
+  set('i-cisen-pct', PCT(d.compras_isentas,d.compras_bruto)+' do total');
 
   // Saldo
   const saldo=d.total_deb_icms-d.total_cred_icms;
@@ -1081,6 +1080,13 @@ function renderPIS(){
   set('p-base-comp',  BRL(d.base_comp_pis));
   set('p-cred-compra',BRL(d.cred_pis_compra));
   set('p-cred-total-kpi',BRL(d.total_cred_pis));
+  // Percentuais no kpi-sub
+  set('p-vtrib-pct',    PCT(d.venda_trib_pis,d.venda_bruta)+' das vendas');
+  set('p-vzero-pct',    PCT(d.venda_aliq_zero,d.venda_bruta)+' das vendas');
+  set('p-ctrib-pct',    PCT(d.compras_trib_pis,d.compras_bruto)+' das compras');
+  set('p-bcomp-pct',    PCT(d.base_comp_pis,d.compras_bruto)+' das compras');
+  set('p-credcomp2-pct',PCT(d.cred_pis_compra,d.total_cred_pis)+' do crédito');
+  set('p-credtotal2-pct',PCT(d.total_cred_pis,d.total_deb_pis)+' do débito');
 
   const spvt=getSerie('venda_trib_pis'),spvz=getSerie('venda_aliq_zero');
   const spdp=getSerie('total_deb_pis'),spna=getSerie('cred_pis_nao_aprov');
@@ -1092,6 +1098,10 @@ function renderPIS(){
   sparkline('sp-p-credcomp',spcc,'rgb(102,187,106)',LABELS);sparkline('sp-p-credtotal',sptc,'rgb(62,207,142)',LABELS);
   varBadge('var-p-deb',spdp,true);
   varBadge('var-p-credcomp',spcc);varBadge('var-p-credtotal',sptc);
+  // varBadge para novos KPIs
+  varBadge('var-p-vtrib',spvt);varBadge('var-p-vzero',spvz);
+  varBadge('var-p-ctrib',spct);varBadge('var-p-bcomp',spbc);
+  varBadge('var-p-credcomp2',spcc);varBadge('var-p-credtotal2',sptc);
 
   let htDP='',tpBV=0,tpDV=0,tpDC=0,tpOS=0,tpLC=0,tpTD=0;
   ld.forEach(r=>{
