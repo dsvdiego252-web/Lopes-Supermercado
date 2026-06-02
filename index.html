@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<!-- LOPES_DASHBOARD_V4_PISCOFINS_E_CREDITOS_ICMS -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Lopes Supermercados — Dashboard V2</title>
@@ -628,7 +629,7 @@ tfoot td{
     </div>
     <div class="chart-card" style="flex:1">
       <div class="chart-title"><div class="cdot" id="icms-ch2-dot" style="background:#66bb6a"></div><span id="icms-ch2-title">Crédito ICMS — Composição</span></div>
-      <div style="height:180px;position:relative"><canvas id="ch-icms-2"></canvas></div>
+      <div style="height:240px;position:relative"><canvas id="ch-icms-2"></canvas></div>
     </div>
     <div class="chart-card" style="flex:1">
       <div class="chart-title"><div class="cdot" id="icms-ch3-dot" style="background:#f5a623"></div><span id="icms-ch3-title">Saldo ICMS — Evolução</span></div>
@@ -657,11 +658,13 @@ tfoot td{
 
   <div class="slbl">Crédito ICMS — por Empresa</div>
   <div class="tcard"><div class="tscroll"><table>
-    <thead><tr><th>Empresa</th><th class="r">Créd. Compras</th><th class="r">Energia</th><th class="r">Combustível</th><th class="r">GLP</th><th class="r">Excl. ST</th><th class="r">Outros</th><th class="r">Total Crédito</th></tr></thead>
+    <thead><tr><th>Empresa</th><th class="r">Créd. Compras</th><th class="r">Energia</th><th class="r">Combustível</th><th class="r">GLP</th><th class="r">Excl. ST</th><th class="r">Transf.</th><th class="r">Dev. Venda</th><th class="r">ADREM</th><th class="r">Imobilizado</th><th class="r">Bonificação</th><th class="r">Out. Entradas</th><th class="r">Frete</th><th class="r">Etiquetas</th><th class="r">Total Crédito</th></tr></thead>
     <tbody id="tb-cred-icms"></tbody>
     <tfoot><tr><td>TOTAL</td><td class="r" id="tfc-cc">—</td><td class="r" id="tfc-en">—</td>
       <td class="r" id="tfc-cb">—</td><td class="r" id="tfc-gl">—</td>
-      <td class="r" id="tfc-ex">—</td><td class="r" id="tfc-ou">—</td><td class="r" id="tfc-tc">—</td></tr></tfoot>
+      <td class="r" id="tfc-ex">—</td><td class="r" id="tfc-tr">—</td><td class="r" id="tfc-dv">—</td>
+      <td class="r" id="tfc-ad">—</td><td class="r" id="tfc-im">—</td><td class="r" id="tfc-bo">—</td>
+      <td class="r" id="tfc-ou">—</td><td class="r" id="tfc-fr">—</td><td class="r" id="tfc-et">—</td><td class="r" id="tfc-tc">—</td></tr></tfoot>
   </table></div></div>
 </div>
 
@@ -722,22 +725,22 @@ tfoot td{
       <div class="kpi-sub"><span id="p-ctrib-pct" style="font-family:var(--fm);font-size:10px;color:#4fc3f7"></span> das compras</div>
       <canvas class="kpi-spark" id="sp-p-ctrib"></canvas>
     </div>
-    <div class="kpi clickable" style="--kc:#26c6da" id="kpi-p-bcomp" onclick="setFiltro('pis','base_comp_pis',this)">
+    <div class="kpi clickable" style="--kc:#26c6da" id="kpi-p-bcomp" onclick="setFiltro('pis','compras_aliq_zero',this)">
       <span class="kpi-active-dot">● ativo</span>
-      <div class="kpi-lbl">Base Crédito PIS/Cofins</div><div class="kpi-val" id="p-base-comp">—</div>
+      <div class="kpi-lbl">Compras Alíquota Zero</div><div class="kpi-val" id="p-base-comp">—</div>
       <div class="kpi-sub"><span id="p-bcomp-pct" style="font-family:var(--fm);font-size:10px;color:#26c6da"></span> das compras</div>
       <canvas class="kpi-spark" id="sp-p-bcomp"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-p-credcomp" onclick="setFiltro('pis','cred_pis_compra',this)">
       <span class="kpi-var" id="var-p-credcomp"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Crédito s/ Compras PIS/Cofins</div><div class="kpi-val" id="p-cred-compra">—</div>
-      <div class="kpi-sub"><span id="p-credcomp2-pct" style="font-family:var(--fm);font-size:10px;color:#66bb6a"></span> do crédito</div>
+      <div class="kpi-sub">crédito aproveitado nas compras</div>
       <canvas class="kpi-spark" id="sp-p-credcomp"></canvas>
     </div>
     <div class="kpi clickable" style="--kc:#3ecf8e" id="kpi-p-credtotal" onclick="setFiltro('pis','total_cred_pis',this)">
       <span class="kpi-var" id="var-p-credtotal"></span><span class="kpi-active-dot">● ativo</span>
       <div class="kpi-lbl">Total Crédito PIS/Cofins</div><div class="kpi-val" id="p-cred-total-kpi">—</div>
-      <div class="kpi-sub"><span id="p-credtotal2-pct" style="font-family:var(--fm);font-size:10px;color:#3ecf8e"></span> do débito</div>
+      <div class="kpi-sub">crédito total apurado</div>
       <canvas class="kpi-spark" id="sp-p-credtotal"></canvas>
     </div>
   </div>
@@ -983,7 +986,7 @@ const FILTRO_INFO={
   cred_pis_nao_aprov:{lbl:'Créd. Não Aproveitado',cor:'#ab47bc', dados:'cred_pis_nao_aprov'},
   // PIS compras
   compras_trib_pis:{lbl:'Compras Tributadas PIS', cor:'#4fc3f7', dados:'compras_trib_pis'},
-  base_comp_pis:   {lbl:'Base Crédito PIS',       cor:'#26c6da', dados:'base_comp_pis'},
+  compras_aliq_zero:{lbl:'Compras Alíquota Zero', cor:'#26c6da', dados:'compras_aliq_zero'},
   cred_pis_compra: {lbl:'Crédito s/ Compras PIS', cor:'#66bb6a', dados:'cred_pis_compra'},
   total_cred_pis:  {lbl:'Total Crédito PIS',      cor:'#3ecf8e', dados:'total_cred_pis'},
 };
@@ -1396,20 +1399,26 @@ function renderICMS(){
   set('tfi-dv',BRL(tDV));set('tfi-tr',BRL(tTR));set('tfi-dc',BRL(tDC));
   set('tfi-os',BRL(tOS));set('tfi-df',BRL(tDF));set('tfi-td',BRL(tTD));
 
-  let htCI='',tcCC=0,tcEN=0,tcCB=0,tcGL=0,tcEX=0,tcOU=0,tcTC=0;
+  let htCI='',tcCC=0,tcEN=0,tcCB=0,tcGL=0,tcEX=0,tcTR=0,tcDV=0,tcAD=0,tcIM=0,tcBO=0,tcOU=0,tcFR=0,tcET=0,tcTC=0;
   ld.forEach(r=>{
-    const ou=r.cred_icms_transf+r.cred_icms_dev+r.cred_icms_adrem+r.cred_icms_imob+r.cred_icms_bonif+r.cred_icms_out+r.cred_icms_frete+r.cred_icms_etiq;
     tcCC+=r.cred_icms_compras;tcEN+=r.cred_icms_energia;tcCB+=r.cred_icms_comb;
-    tcGL+=r.cred_icms_glp;tcEX+=r.cred_icms_excst;tcOU+=ou;tcTC+=r.total_cred_icms;
+    tcGL+=r.cred_icms_glp;tcEX+=r.cred_icms_excst;tcTR+=r.cred_icms_transf;tcDV+=r.cred_icms_dev;
+    tcAD+=r.cred_icms_adrem;tcIM+=r.cred_icms_imob;tcBO+=r.cred_icms_bonif;tcOU+=r.cred_icms_out;
+    tcFR+=r.cred_icms_frete;tcET+=r.cred_icms_etiq;tcTC+=r.total_cred_icms;
     htCI+=`<tr><td><b>${r.loja}</b></td><td class="r">${BRL(r.cred_icms_compras)}</td>
       <td class="r">${BRL(r.cred_icms_energia)}</td><td class="r">${BRL(r.cred_icms_comb)}</td>
       <td class="r">${BRL(r.cred_icms_glp)}</td><td class="r">${BRL(r.cred_icms_excst)}</td>
-      <td class="r">${BRL(ou)}</td>
+      <td class="r">${BRL(r.cred_icms_transf)}</td><td class="r">${BRL(r.cred_icms_dev)}</td>
+      <td class="r">${BRL(r.cred_icms_adrem)}</td><td class="r">${BRL(r.cred_icms_imob)}</td>
+      <td class="r">${BRL(r.cred_icms_bonif)}</td><td class="r">${BRL(r.cred_icms_out)}</td>
+      <td class="r">${BRL(r.cred_icms_frete)}</td><td class="r">${BRL(r.cred_icms_etiq)}</td>
       <td class="r" style="font-weight:700;color:#66bb6a">${BRL(r.total_cred_icms)}</td></tr>`;
   });
   setH('tb-cred-icms',htCI);
   set('tfc-cc',BRL(tcCC));set('tfc-en',BRL(tcEN));set('tfc-cb',BRL(tcCB));
-  set('tfc-gl',BRL(tcGL));set('tfc-ex',BRL(tcEX));set('tfc-ou',BRL(tcOU));set('tfc-tc',BRL(tcTC));
+  set('tfc-gl',BRL(tcGL));set('tfc-ex',BRL(tcEX));set('tfc-tr',BRL(tcTR));set('tfc-dv',BRL(tcDV));
+  set('tfc-ad',BRL(tcAD));set('tfc-im',BRL(tcIM));set('tfc-bo',BRL(tcBO));set('tfc-ou',BRL(tcOU));
+  set('tfc-fr',BRL(tcFR));set('tfc-et',BRL(tcET));set('tfc-tc',BRL(tcTC));
 
   // Gráficos — dinâmicos conforme filtro
   if(fi){
@@ -1434,9 +1443,18 @@ function renderICMS(){
     donutChart('ch-icms-1',['Vendas','Transf.','Dev. Compra','DIFAL','Outros'],
       [d.deb_icms_vendas,d.deb_icms_transf,d.deb_icms_dev,d.deb_icms_difal,d.deb_icms_outras+d.deb_icms_perdas+d.deb_icms_trocas+d.deb_icms_bonif],
       ['rgba(239,83,80,.8)','rgba(245,166,35,.8)','rgba(171,71,188,.8)','rgba(38,198,218,.8)','rgba(86,96,124,.7)']);
-    donutChart('ch-icms-2',['Compras','Energia','Comb.','GLP','Excl.ST','Outros'],
-      [d.cred_icms_compras,d.cred_icms_energia,d.cred_icms_comb,d.cred_icms_glp,d.cred_icms_excst,d.cred_icms_transf+d.cred_icms_dev+d.cred_icms_adrem+d.cred_icms_bonif+d.cred_icms_out+d.cred_icms_frete+d.cred_icms_etiq],
-      ['rgba(102,187,106,.8)','rgba(79,195,247,.8)','rgba(245,166,35,.8)','rgba(171,71,188,.8)','rgba(38,198,218,.8)','rgba(86,96,124,.7)']);
+    DC('ch-icms-2');
+    const icmsCredLabels=['Compras','Energia','Combustível','GLP','Excl. ST','Transf.','Dev. Venda','ADREM','Imobilizado','Bonificação','Out. Entradas','Frete','Etiquetas'];
+    const icmsCredValues=[d.cred_icms_compras,d.cred_icms_energia,d.cred_icms_comb,d.cred_icms_glp,d.cred_icms_excst,d.cred_icms_transf,d.cred_icms_dev,d.cred_icms_adrem,d.cred_icms_imob,d.cred_icms_bonif,d.cred_icms_out,d.cred_icms_frete,d.cred_icms_etiq];
+    const icmsCredEl=document.getElementById('ch-icms-2');
+    if(icmsCredEl){_CH['ch-icms-2']=new Chart(icmsCredEl,{type:'bar',plugins:[BAR_LABELS_PLUGIN],
+      data:{labels:icmsCredLabels,datasets:[{label:'Crédito ICMS',data:icmsCredValues,backgroundColor:'rgba(102,187,106,.75)',borderRadius:4}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...TTP}},
+        scales:{x:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}},
+                y:{grid:{display:false},ticks:{...TK,font:{family:'JetBrains Mono',size:9}}}}
+      }
+    });}
     const serDeb=getSerie('total_deb_icms'),serCred=getSerie('total_cred_icms');
     barChart('ch-icms-3',LABELS,[
       {label:'Débito',data:serDeb,backgroundColor:'rgba(239,83,80,.65)',borderRadius:4},
@@ -1483,20 +1501,20 @@ function renderPIS(){
   set('p-deb-vendas',BRL(d.total_deb_pis));set('p-cred-nao-aprov',BRL(d.cred_pis_nao_aprov));
   // KPIs compras PIS
   set('p-comp-trib',  BRL(d.compras_trib_pis));
-  set('p-base-comp',  BRL(d.base_comp_pis));
+  set('p-base-comp',  BRL(d.compras_aliq_zero));
   set('p-cred-compra',BRL(d.cred_pis_compra));
   set('p-cred-total-kpi',BRL(d.total_cred_pis));
   // Percentuais no kpi-sub
   set('p-vtrib-pct',    PCT(d.venda_trib_pis,d.venda_bruta)+' das vendas');
   set('p-vzero-pct',    PCT(d.venda_aliq_zero,d.venda_bruta)+' das vendas');
   set('p-ctrib-pct',    PCT(d.compras_trib_pis,d.compras_bruto)+' das compras');
-  set('p-bcomp-pct',    PCT(d.base_comp_pis,d.compras_bruto)+' das compras');
-  set('p-credcomp2-pct',PCT(d.cred_pis_compra,d.total_cred_pis)+' do crédito');
-  set('p-credtotal2-pct',PCT(d.total_cred_pis,d.total_deb_pis)+' do débito');
+  set('p-bcomp-pct',    PCT(d.compras_aliq_zero,d.compras_bruto)+' das compras');
+  set('p-credcomp2-pct','');
+  set('p-credtotal2-pct','');
 
   const spvt=getSerie('venda_trib_pis'),spvz=getSerie('venda_aliq_zero');
   const spdp=getSerie('total_deb_pis'),spna=getSerie('cred_pis_nao_aprov');
-  const spct=getSerie('compras_trib_pis'),spbc=getSerie('base_comp_pis');
+  const spct=getSerie('compras_trib_pis'),spbc=getSerie('compras_aliq_zero');
   const spcc=getSerie('cred_pis_compra'),sptc=getSerie('total_cred_pis');
   sparkline('sp-p-vtrib',spvt,'rgb(79,195,247)',LABELS);sparkline('sp-p-vzero',spvz,'rgb(102,187,106)',LABELS);
   sparkline('sp-p-deb',spdp,'rgb(245,166,35)',LABELS);sparkline('sp-p-nao',spna,'rgb(171,71,188)',LABELS);
@@ -1627,11 +1645,11 @@ function exportCSVActive(){
     const icms=_calcICMSRecolherLopes().valor,pc=_calcPISCOFINSRecolher();
     ld.forEach(r=>rows.push([r.loja,R(r.venda_bruta),R(r.venda_liq),R(r.dev_venda),R(r.compras_bruto),R(r.venda_trib),R(r.venda_st),R(r.venda_isenta),icms,pc]));
   }else if(active==='page-icms'){
-    rows.push(['Empresa','Débito ICMS','Crédito ICMS','Saldo ICMS','Débito Vendas','Crédito Compras','Saldo Acumulado ICMS','ICMS-ST']);
-    ld.forEach(r=>rows.push([r.loja,R(r.total_deb_icms),R(r.total_cred_icms),R(r.total_deb_icms)-R(r.total_cred_icms),R(r.deb_icms_vendas),R(r.cred_icms_compras),R(r.saldo_acumulado_icms),R(r.total_deb_icms_st)]));
+    rows.push(['Empresa','Débito ICMS','Crédito ICMS','Saldo ICMS','Débito Vendas','Crédito Compras','Energia','Combustível','GLP','Excl. ST','Transf.','Dev. Venda','ADREM','Imobilizado','Bonificação','Out. Entradas','Frete','Etiquetas','Saldo Acumulado ICMS','ICMS-ST']);
+    ld.forEach(r=>rows.push([r.loja,R(r.total_deb_icms),R(r.total_cred_icms),R(r.total_deb_icms)-R(r.total_cred_icms),R(r.deb_icms_vendas),R(r.cred_icms_compras),R(r.cred_icms_energia),R(r.cred_icms_comb),R(r.cred_icms_glp),R(r.cred_icms_excst),R(r.cred_icms_transf),R(r.cred_icms_dev),R(r.cred_icms_adrem),R(r.cred_icms_imob),R(r.cred_icms_bonif),R(r.cred_icms_out),R(r.cred_icms_frete),R(r.cred_icms_etiq),R(r.saldo_acumulado_icms),R(r.total_deb_icms_st)]));
   }else{
-    rows.push(['Empresa','Débito PIS/Cofins','Crédito PIS/Cofins','Saldo','Base Vendas','Base Compras','Crédito não aproveitado']);
-    ld.forEach(r=>rows.push([r.loja,R(r.total_deb_pis),R(r.total_cred_pis),R(r.total_deb_pis)-R(r.total_cred_pis),R(r.base_venda_pis),R(r.base_comp_pis),R(r.cred_pis_nao_aprov)]));
+    rows.push(['Empresa','Débito PIS/Cofins','Crédito PIS/Cofins','Saldo','Base Vendas','Compras Alíquota Zero','Crédito não aproveitado']);
+    ld.forEach(r=>rows.push([r.loja,R(r.total_deb_pis),R(r.total_cred_pis),R(r.total_deb_pis)-R(r.total_cred_pis),R(r.base_venda_pis),R(r.compras_aliq_zero),R(r.cred_pis_nao_aprov)]));
   }
   _downloadCSV('lopes_'+active.replace('page-','')+'_'+per+'.csv',rows);
 }
