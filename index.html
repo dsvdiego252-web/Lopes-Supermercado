@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lopes Supermercados — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#090b0f;--surface:#0f1319;--surface2:#141a24;--border:#1c2438;--border2:#243050;
+  --accent:#f5a623;--a2:#4fc3f7;--a3:#66bb6a;--a4:#ef5350;--a5:#ab47bc;--a6:#26c6da;
+  --text:#e4e8f2;--muted:#56607c;
+  --ff:'Barlow',sans-serif;--fc:'Barlow Condensed',sans-serif;--fm:'JetBrains Mono',monospace;
+  --rad:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--ff);font-size:13px}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#0c1018,#0f1520);border-bottom:1px solid var(--border);
+  padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.5);
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#f5a623,#d4860a);
+  display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(245,166,35,.3);}
+.logo-name{font-family:var(--fc);font-size:20px;font-weight:800;letter-spacing:.02em}
+.logo-sub{font-size:9px;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hsel-lbl{font-size:10px;color:var(--muted);font-family:var(--fm);letter-spacing:.06em}
+.hsel{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:var(--fm);font-size:11px;padding:5px 9px;outline:none;cursor:pointer;transition:border-color .15s;}
+.hsel:focus,.hsel:hover{border-color:var(--accent)}
+.hbadge{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);border-radius:8px;
+  padding:4px 11px;font-family:var(--fm);font-size:10px;color:var(--accent);}
+.hdot{width:6px;height:6px;border-radius:50%;background:#3ecf8e;display:inline-block;margin-right:4px;box-shadow:0 0 6px #3ecf8e}
+
+/* EMPRESA PICKER (checkbox dropdown) */
+.emp-picker-wrap{position:relative}
+.emp-picker-btn{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:var(--fm);font-size:11px;padding:5px 10px;
+  cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color .15s;
+  white-space:nowrap;min-width:120px;
+}
+.emp-picker-btn:hover{border-color:var(--accent)}
+.emp-picker-arrow{margin-left:auto;font-size:9px;color:var(--muted);transition:transform .2s}
+.emp-picker-dropdown{
+  position:absolute;top:calc(100% + 6px);right:0;min-width:200px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:500;overflow:hidden;display:none;
+}
+.emp-picker-dropdown.open{display:block}
+.emp-picker-header{
+  padding:8px 12px;font-family:var(--fm);font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.emp-picker-actions{display:flex;gap:6px}
+.ep-link{background:none;border:none;color:var(--accent);font-family:var(--fm);font-size:10px;cursor:pointer;padding:0}
+.ep-link:hover{text-decoration:underline}
+.emp-picker-item{
+  display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;
+  transition:background .1s;border-bottom:1px solid rgba(28,36,56,.4);
+}
+.emp-picker-item:last-child{border-bottom:none}
+.emp-picker-item:hover{background:rgba(245,166,35,.06)}
+.ep-cb{width:14px;height:14px;border-radius:4px;border:1px solid var(--border2);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;}
+.ep-cb.checked{background:var(--accent);border-color:var(--accent)}
+.ep-cb.checked::after{content:'✓';font-size:9px;color:#000;font-weight:700}
+.ep-name{font-family:var(--fm);font-size:11px}
+.ep-tag{font-size:9px;color:var(--muted);margin-left:auto;font-family:var(--fm)}
+
+/* TABS */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 20px;gap:2px;}
+.tab-btn{padding:12px 20px;font-size:12px;font-weight:700;font-family:var(--fc);letter-spacing:.07em;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);border:none;border-bottom:2px solid transparent;
+  background:none;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.sub-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;}
+.sub-btn{padding:8px 16px;font-size:11px;font-weight:700;font-family:var(--fc);letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);border:none;border-bottom:2px solid transparent;
+  background:none;transition:all .15s;}
+.sub-btn:hover{color:var(--text)}.sub-btn.active{color:var(--a2);border-bottom-color:var(--a2)}
+
+.page{display:none;padding:18px 20px 32px}.page.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;gap:11px;margin-bottom:18px}
+.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);
+  padding:14px 16px 10px;position:relative;overflow:hidden;
+  border-top:2px solid var(--kc,var(--accent));transition:transform .18s,box-shadow .18s,background .15s;}
+.kpi::after{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
+  background:radial-gradient(circle at top right,var(--kc,var(--accent)),transparent 70%);opacity:.05;pointer-events:none;}
+.kpi.clickable{cursor:pointer}
+.kpi.clickable:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.kpi.active-kpi{background:rgba(245,166,35,.06);border-color:var(--kc,var(--accent));
+  box-shadow:0 0 0 1px var(--kc,var(--accent)),0 6px 20px rgba(0,0,0,.3);}
+.kpi-lbl{font-size:10px;color:var(--muted);font-family:var(--fm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.kpi-val{font-size:15px;font-weight:700;font-family:var(--fm);line-height:1.25;word-break:break-all}
+.kpi-sub{font-size:10px;color:var(--muted);font-family:var(--fm);margin-top:3px}
+.kpi-spark{width:100%;height:26px;margin-top:9px;opacity:.8}
+.kpi-var{position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;border-radius:5px;padding:2px 6px;}
+.var-up{background:rgba(239,83,80,.12);color:#ef5350;border:1px solid rgba(239,83,80,.25)}
+.var-dn{background:rgba(102,187,106,.12);color:#66bb6a;border:1px solid rgba(102,187,106,.25)}
+.kpi-active-dot{display:none;position:absolute;bottom:7px;right:8px;
+  font-family:var(--fm);font-size:9px;color:var(--accent);letter-spacing:.05em}
+.kpi.active-kpi .kpi-active-dot{display:block}
+
+/* FILTRO INFO */
+.filter-bar-info{
+  display:none;align-items:center;gap:10px;margin-bottom:14px;
+  background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);
+  border-radius:10px;padding:7px 14px;font-family:var(--fm);font-size:11px;color:var(--accent);
+}
+.filter-bar-info.show{display:flex}
+.fbi-clear{background:none;border:1px solid rgba(245,166,35,.3);border-radius:5px;
+  color:var(--accent);font-family:var(--fm);font-size:10px;padding:2px 8px;cursor:pointer;margin-left:auto;}
+.fbi-clear:hover{background:rgba(245,166,35,.1)}
+
+/* CHARTS */
+.charts-row{display:flex;gap:11px;margin-bottom:18px;flex-wrap:wrap}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;flex:1;min-width:240px;}
+.chart-title{font-size:10px;color:var(--muted);font-family:var(--fm);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.slbl{font-size:10px;font-family:var(--fm);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;
+  display:flex;align-items:center;gap:10px;margin-bottom:13px;margin-top:4px;}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.saldo-row{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:18px}
+.saldo{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);
+  padding:16px 18px;display:flex;align-items:center;gap:14px;}
+.saldo-ico{font-size:24px}.saldo-lbl{font-size:10px;font-family:var(--fm);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.saldo-val{font-size:20px;font-weight:700;font-family:var(--fm);line-height:1.1}
+.saldo-sub{font-size:10px;font-family:var(--fm);color:var(--muted);margin-top:2px}
+.s-deb{color:#ef5350}.s-cred{color:#66bb6a}.s-pos{color:#ef5350}.s-neg{color:#66bb6a}
+
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);margin-bottom:18px;overflow:hidden}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--surface2);padding:8px 12px;font-family:var(--fm);font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th.r{text-align:right}
+td{padding:7px 12px;font-size:12px;border-bottom:1px solid rgba(28,36,56,.5)}
+tr:last-child td{border-bottom:none}tr:hover td{background:rgba(245,166,35,.025)}
+td.r{text-align:right;font-family:var(--fm);font-size:11px}
+tfoot td{background:var(--surface2);font-weight:700;font-family:var(--fm);font-size:11px;border-top:1px solid var(--border2)}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-family:var(--fm);font-weight:500}
+.tg-t{background:rgba(79,195,247,.12);color:#4fc3f7}.tg-s{background:rgba(171,71,188,.12);color:#ab47bc}
+.tg-i{background:rgba(102,187,106,.12);color:#66bb6a}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🛒</div>
+    <div>
+      <div class="logo-name">LOPES SUPERMERCADOS</div>
+      <div class="logo-sub">Dashboard Fiscal e Comercial</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <!-- EMPRESA: checkbox picker -->
+    <span class="hsel-lbl">EMPRESA</span>
+    <div class="emp-picker-wrap" id="emp-wrap">
+      <div class="emp-picker-btn" id="emp-btn" onclick="toggleEmpPicker()">
+        <span id="emp-label">Todas</span>
+        <span class="emp-picker-arrow" id="emp-arrow">▾</span>
+      </div>
+      <div class="emp-picker-dropdown" id="emp-dropdown">
+        <div class="emp-picker-header">
+          Selecionar Empresas
+          <div class="emp-picker-actions">
+            <button class="ep-link" onclick="empSelectAll()">Todas</button>
+            <button class="ep-link" onclick="empClearAll()">Limpar</button>
+          </div>
+        </div>
+        <div id="emp-items"></div>
+      </div>
+    </div>
+    <!-- PERÍODO -->
+    <span class="hsel-lbl">PERÍODO</span>
+    <select class="hsel" id="sel-periodo" onchange="render()">
+      <option value="all">Todos</option>
+    </select>
+    <div class="hbadge"><span class="hdot"></span><span id="hdr-badge">Carregando...</span></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('comercial',this)">🛒 Comercial</button>
+  <button class="tab-btn" onclick="switchTab('impostos',this)">🧾 Impostos</button>
+</div>
+<div class="sub-bar" id="sub-impostos" style="display:none">
+  <button class="sub-btn active" onclick="switchSub('icms',this)">ICMS</button>
+  <button class="sub-btn" onclick="switchSub('piscofins',this)">PIS / Cofins</button>
+</div>
+
+<!-- ══ COMERCIAL ══ -->
+<div class="page active" id="page-comercial">
+  <div class="filter-bar-info" id="com-filter-info">
+    <span id="com-filter-text">Filtrando por: —</span>
+    <button class="fbi-clear" onclick="clearFiltro('com')">✕ Limpar</button>
+  </div>
+  <div class="slbl">Visão Geral</div>
+  <div class="kpi-grid g4">
+    <div class="kpi clickable" style="--kc:#f5a623" id="kpi-com-fatbruto" onclick="setFiltro('com','fat_bruto',this)">
+      <span class="kpi-var" id="var-com-fatbruto"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Faturamento Bruto</div>
+      <div class="kpi-val" id="c-fat-bruto">—</div>
+      <div class="kpi-sub">total de vendas</div>
+      <canvas class="kpi-spark" id="sp-com-fatbruto"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-com-fatliq" onclick="setFiltro('com','fat_liq',this)">
+      <span class="kpi-var" id="var-com-fatliq"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Faturamento Líquido</div>
+      <div class="kpi-val" id="c-fat-liq">—</div>
+      <div class="kpi-sub">após devoluções</div>
+      <canvas class="kpi-spark" id="sp-com-fatliq"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ef5350" id="kpi-com-dev" onclick="setFiltro('com','dev_venda',this)">
+      <span class="kpi-var" id="var-com-dev"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Devolução de Venda</div>
+      <div class="kpi-val" id="c-dev-venda">—</div>
+      <div class="kpi-sub" id="c-dev-pct">% sobre bruto</div>
+      <canvas class="kpi-spark" id="sp-com-dev"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-com-compras" onclick="setFiltro('com','compras_bruto',this)">
+      <span class="kpi-var" id="var-com-compras"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Total Compras</div>
+      <div class="kpi-val" id="c-compras">—</div>
+      <div class="kpi-sub">bruto</div>
+      <canvas class="kpi-spark" id="sp-com-compras"></canvas>
+    </div>
+  </div>
+  <div class="slbl">Composição das Vendas</div>
+  <div class="kpi-grid g3">
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-com-vtrib" onclick="setFiltro('com','venda_trib',this)">
+      <span class="kpi-var" id="var-com-vtrib"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Venda Tributada <span style="font-family:var(--fm);font-size:10px;color:var(--a2)" id="c-trib-pct"></span></div>
+      <div class="kpi-val" id="c-venda-trib">—</div>
+      <div class="kpi-sub">ICMS normal</div>
+      <canvas class="kpi-spark" id="sp-com-vtrib"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-com-vst" onclick="setFiltro('com','venda_st',this)">
+      <span class="kpi-var" id="var-com-vst"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Venda ST <span style="font-family:var(--fm);font-size:10px;color:#ab47bc" id="c-st-pct"></span></div>
+      <div class="kpi-val" id="c-venda-st">—</div>
+      <div class="kpi-sub">substituição tributária</div>
+      <canvas class="kpi-spark" id="sp-com-vst"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-com-visen" onclick="setFiltro('com','venda_isenta',this)">
+      <span class="kpi-var" id="var-com-visen"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Venda Isenta <span style="font-family:var(--fm);font-size:10px;color:#66bb6a" id="c-isen-pct"></span></div>
+      <div class="kpi-val" id="c-venda-isenta">—</div>
+      <div class="kpi-sub">isenções fiscais</div>
+      <canvas class="kpi-spark" id="sp-com-visen"></canvas>
+    </div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card" style="flex:2">
+      <div class="chart-title"><div class="cdot" style="background:#f5a623"></div><span id="com-ch1-title">Faturamento Bruto — Evolução Mensal</span></div>
+      <div style="height:210px;position:relative"><canvas id="ch-com-1"></canvas></div>
+    </div>
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" style="background:#4fc3f7"></div><span id="com-ch2-title">Composição das Vendas</span></div>
+      <div style="height:210px;position:relative"><canvas id="ch-com-2"></canvas></div>
+    </div>
+  </div>
+  <div class="slbl">Detalhamento por Empresa</div>
+  <div class="tcard"><div class="tscroll"><table>
+    <thead><tr><th>Empresa</th><th class="r">Fat. Bruto</th><th class="r">Fat. Líquido</th>
+      <th class="r">Devolução</th><th class="r">V. Tributada</th><th class="r">V. ST</th><th class="r">V. Isenta</th><th class="r">% Trib.</th></tr></thead>
+    <tbody id="tb-comercial"></tbody>
+    <tfoot><tr><td>TOTAL</td><td class="r" id="tf-bruto">—</td><td class="r" id="tf-liq">—</td>
+      <td class="r" id="tf-dev">—</td><td class="r" id="tf-trib">—</td>
+      <td class="r" id="tf-st">—</td><td class="r" id="tf-isen">—</td><td class="r" id="tf-ptrib">—</td>
+    </tr></tfoot>
+  </table></div></div>
+</div>
+
+<!-- ══ ICMS ══ -->
+<div class="page" id="page-icms">
+  <div class="filter-bar-info" id="icms-filter-info">
+    <span id="icms-filter-text">Filtrando por: —</span>
+    <button class="fbi-clear" onclick="clearFiltro('icms')">✕ Limpar</button>
+  </div>
+  <div class="saldo-row">
+    <div class="saldo"><div class="saldo-ico">📤</div>
+      <div><div class="saldo-lbl">Total Débito ICMS</div>
+        <div class="saldo-val s-deb" id="i-deb-total">—</div>
+        <div class="saldo-sub">saídas + transf.</div></div></div>
+    <div class="saldo"><div class="saldo-ico">📥</div>
+      <div><div class="saldo-lbl">Total Crédito ICMS</div>
+        <div class="saldo-val s-cred" id="i-cred-total">—</div>
+        <div class="saldo-sub">compras + outros</div></div></div>
+    <div class="saldo"><div class="saldo-ico">⚖️</div>
+      <div><div class="saldo-lbl">Saldo ICMS</div>
+        <div class="saldo-val" id="i-saldo">—</div>
+        <div class="saldo-sub" id="i-saldo-sub">—</div></div></div>
+  </div>
+
+  <div class="slbl">Vendas — Composição ICMS</div>
+  <div class="kpi-grid g5">
+    <div class="kpi clickable" style="--kc:#f5a623" id="kpi-i-vtotal" onclick="setFiltro('icms','venda_bruta',this)">
+      <span class="kpi-var" id="var-i-vtotal"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas Total</div>
+      <div class="kpi-val" id="i-venda-total">—</div>
+      <div class="kpi-sub">bruto</div>
+      <canvas class="kpi-spark" id="sp-i-vtotal"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-i-vtrib" onclick="setFiltro('icms','venda_trib',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#4fc3f7" id="i-vtrib-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas Tributadas</div>
+      <div class="kpi-val" id="i-venda-trib">—</div>
+      <div class="kpi-sub">ICMS normal</div>
+      <canvas class="kpi-spark" id="sp-i-vtrib"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-i-vst" onclick="setFiltro('icms','venda_st',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#ab47bc" id="i-vst-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas ST</div>
+      <div class="kpi-val" id="i-venda-st">—</div>
+      <div class="kpi-sub">subst. tributária</div>
+      <canvas class="kpi-spark" id="sp-i-vst"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-i-visen" onclick="setFiltro('icms','venda_isenta',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#66bb6a" id="i-visen-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas Isentas</div>
+      <div class="kpi-val" id="i-venda-isenta">—</div>
+      <div class="kpi-sub">isenções fiscais</div>
+      <canvas class="kpi-spark" id="sp-i-visen"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ef5350" id="kpi-i-debvendas" onclick="setFiltro('icms','deb_icms_vendas',this)">
+      <span class="kpi-var" id="var-i-debvendas"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Débito s/ Vendas</div>
+      <div class="kpi-val" id="i-deb-vendas">—</div>
+      <div class="kpi-sub">ICMS gerado nas saídas</div>
+      <canvas class="kpi-spark" id="sp-i-debvendas"></canvas>
+    </div>
+  </div>
+
+  <div class="slbl">Compras — Composição e Crédito ICMS</div>
+  <div class="kpi-grid g5">
+    <div class="kpi clickable" style="--kc:#f5a623" id="kpi-i-ctotal" onclick="setFiltro('icms','compras_bruto',this)">
+      <span class="kpi-var" id="var-i-ctotal"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Compras Total</div>
+      <div class="kpi-val" id="i-comp-total">—</div>
+      <div class="kpi-sub">bruto</div>
+      <canvas class="kpi-spark" id="sp-i-ctotal"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-i-ctrib" onclick="setFiltro('icms','compras_trib',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#4fc3f7" id="i-ctrib-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Compras Tributadas</div>
+      <div class="kpi-val" id="i-comp-trib">—</div>
+      <div class="kpi-sub">ICMS normal</div>
+      <canvas class="kpi-spark" id="sp-i-ctrib"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-i-cst" onclick="setFiltro('icms','compras_st',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#ab47bc" id="i-cst-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Compras ST</div>
+      <div class="kpi-val" id="i-comp-st">—</div>
+      <div class="kpi-sub">subst. tributária</div>
+      <canvas class="kpi-spark" id="sp-i-cst"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-i-cisen" onclick="setFiltro('icms','compras_isentas',this)">
+      <span style="position:absolute;top:9px;right:9px;font-family:var(--fm);font-size:10px;color:#66bb6a" id="i-cisen-pct"></span>
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Compras Isentas</div>
+      <div class="kpi-val" id="i-comp-isen">—</div>
+      <div class="kpi-sub">produtos isentos</div>
+      <canvas class="kpi-spark" id="sp-i-cisen"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#26c6da" id="kpi-i-credcomp" onclick="setFiltro('icms','cred_icms_compras',this)">
+      <span class="kpi-var" id="var-i-credcomp"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Crédito s/ Compras</div>
+      <div class="kpi-val" id="i-cred-compras">—</div>
+      <div class="kpi-sub">ICMS creditado</div>
+      <canvas class="kpi-spark" id="sp-i-credcomp"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" id="icms-ch1-dot" style="background:#ef5350"></div><span id="icms-ch1-title">Débito ICMS — Composição</span></div>
+      <div style="height:190px;position:relative"><canvas id="ch-icms-1"></canvas></div>
+    </div>
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" id="icms-ch2-dot" style="background:#66bb6a"></div><span id="icms-ch2-title">Crédito ICMS — Composição</span></div>
+      <div style="height:190px;position:relative"><canvas id="ch-icms-2"></canvas></div>
+    </div>
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" id="icms-ch3-dot" style="background:#f5a623"></div><span id="icms-ch3-title">Saldo ICMS — Evolução</span></div>
+      <div style="height:190px;position:relative"><canvas id="ch-icms-3"></canvas></div>
+    </div>
+  </div>
+
+  <div class="slbl">Débito ICMS — por Empresa</div>
+  <div class="tcard"><div class="tscroll"><table>
+    <thead><tr><th>Empresa</th><th class="r">Déb. Vendas</th><th class="r">Transf.</th><th class="r">Dev. Compra</th><th class="r">Outras Saídas</th><th class="r">DIFAL</th><th class="r">Total Débito</th></tr></thead>
+    <tbody id="tb-deb-icms"></tbody>
+    <tfoot><tr><td>TOTAL</td><td class="r" id="tfi-dv">—</td><td class="r" id="tfi-tr">—</td>
+      <td class="r" id="tfi-dc">—</td><td class="r" id="tfi-os">—</td>
+      <td class="r" id="tfi-df">—</td><td class="r" id="tfi-td">—</td></tr></tfoot>
+  </table></div></div>
+  <div class="slbl">Crédito ICMS — por Empresa</div>
+  <div class="tcard"><div class="tscroll"><table>
+    <thead><tr><th>Empresa</th><th class="r">Créd. Compras</th><th class="r">Energia</th><th class="r">Combustível</th><th class="r">GLP</th><th class="r">Excl. ST</th><th class="r">Outros</th><th class="r">Total Crédito</th></tr></thead>
+    <tbody id="tb-cred-icms"></tbody>
+    <tfoot><tr><td>TOTAL</td><td class="r" id="tfc-cc">—</td><td class="r" id="tfc-en">—</td>
+      <td class="r" id="tfc-cb">—</td><td class="r" id="tfc-gl">—</td>
+      <td class="r" id="tfc-ex">—</td><td class="r" id="tfc-ou">—</td><td class="r" id="tfc-tc">—</td></tr></tfoot>
+  </table></div></div>
+</div>
+
+<!-- ══ PIS/COFINS ══ -->
+<div class="page" id="page-piscofins">
+  <div class="filter-bar-info" id="pis-filter-info">
+    <span id="pis-filter-text">Filtrando por: —</span>
+    <button class="fbi-clear" onclick="clearFiltro('pis')">✕ Limpar</button>
+  </div>
+  <div class="saldo-row">
+    <div class="saldo"><div class="saldo-ico">📤</div>
+      <div><div class="saldo-lbl">Total Débito PIS/Cofins</div>
+        <div class="saldo-val s-deb" id="p-deb-total">—</div>
+        <div class="saldo-sub">vendas + outros</div></div></div>
+    <div class="saldo"><div class="saldo-ico">📥</div>
+      <div><div class="saldo-lbl">Total Crédito PIS/Cofins</div>
+        <div class="saldo-val s-cred" id="p-cred-total">—</div>
+        <div class="saldo-sub">compras + insumos</div></div></div>
+    <div class="saldo"><div class="saldo-ico">⚖️</div>
+      <div><div class="saldo-lbl">Saldo PIS/Cofins</div>
+        <div class="saldo-val" id="p-saldo">—</div>
+        <div class="saldo-sub" id="p-saldo-sub">—</div></div></div>
+  </div>
+  <div class="slbl">Vendas — Base de Cálculo PIS/Cofins</div>
+  <div class="kpi-grid g4">
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-p-vtrib" onclick="setFiltro('pis','venda_trib_pis',this)">
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas Tributadas PIS/Cofins</div>
+      <div class="kpi-val" id="p-venda-trib">—</div>
+      <div class="kpi-sub">base de cálculo</div>
+      <canvas class="kpi-spark" id="sp-p-vtrib"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-p-vzero" onclick="setFiltro('pis','venda_aliq_zero',this)">
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Vendas Alíquota Zero</div>
+      <div class="kpi-val" id="p-venda-zero">—</div>
+      <div class="kpi-sub">monofásicos / cesta</div>
+      <canvas class="kpi-spark" id="sp-p-vzero"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#f5a623" id="kpi-p-deb" onclick="setFiltro('pis','total_deb_pis',this)">
+      <span class="kpi-var" id="var-p-deb"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Débito PIS/Cofins</div>
+      <div class="kpi-val" id="p-deb-vendas">—</div>
+      <div class="kpi-sub">sobre base tributada</div>
+      <canvas class="kpi-spark" id="sp-p-deb"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#ab47bc" id="kpi-p-nao" onclick="setFiltro('pis','cred_pis_nao_aprov',this)">
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Créd. Não Aproveitado</div>
+      <div class="kpi-val" id="p-cred-nao-aprov">—</div>
+      <div class="kpi-sub">MEI / vedado</div>
+      <canvas class="kpi-spark" id="sp-p-nao"></canvas>
+    </div>
+  </div>
+  <div class="slbl">Compras — Crédito PIS/Cofins</div>
+  <div class="kpi-grid g4">
+    <div class="kpi clickable" style="--kc:#4fc3f7" id="kpi-p-ctrib" onclick="setFiltro('pis','compras_trib_pis',this)">
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Compras Tributadas PIS/Cofins</div>
+      <div class="kpi-val" id="p-comp-trib">—</div>
+      <div class="kpi-sub">base de crédito</div>
+      <canvas class="kpi-spark" id="sp-p-ctrib"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#26c6da" id="kpi-p-bcomp" onclick="setFiltro('pis','base_comp_pis',this)">
+      <span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Base Crédito PIS/Cofins</div>
+      <div class="kpi-val" id="p-base-comp">—</div>
+      <div class="kpi-sub">valor base após deduções</div>
+      <canvas class="kpi-spark" id="sp-p-bcomp"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#66bb6a" id="kpi-p-credcomp" onclick="setFiltro('pis','cred_pis_compra',this)">
+      <span class="kpi-var" id="var-p-credcomp"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Crédito s/ Compras PIS/Cofins</div>
+      <div class="kpi-val" id="p-cred-compra">—</div>
+      <div class="kpi-sub">PIS + Cofins creditados</div>
+      <canvas class="kpi-spark" id="sp-p-credcomp"></canvas>
+    </div>
+    <div class="kpi clickable" style="--kc:#3ecf8e" id="kpi-p-credtotal" onclick="setFiltro('pis','total_cred_pis',this)">
+      <span class="kpi-var" id="var-p-credtotal"></span><span class="kpi-active-dot">● ativo</span>
+      <div class="kpi-lbl">Total Crédito PIS/Cofins</div>
+      <div class="kpi-val" id="p-cred-total-kpi">—</div>
+      <div class="kpi-sub">crédito total apurado</div>
+      <canvas class="kpi-spark" id="sp-p-credtotal"></canvas>
+    </div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" id="pis-ch1-dot" style="background:#ef5350"></div><span id="pis-ch1-title">Débito vs Crédito PIS/Cofins</span></div>
+      <div style="height:190px;position:relative"><canvas id="ch-pis-1"></canvas></div>
+    </div>
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" id="pis-ch2-dot" style="background:#66bb6a"></div><span id="pis-ch2-title">Crédito PIS/Cofins — Composição</span></div>
+      <div style="height:190px;position:relative"><canvas id="ch-pis-2"></canvas></div>
+    </div>
+    <div class="chart-card" style="flex:1">
+      <div class="chart-title"><div class="cdot" style="background:#f5a623"></div>Saldo PIS/Cofins — Evolução</div>
+      <div style="height:190px;position:relative"><canvas id="ch-pis-3"></canvas></div>
+    </div>
+  </div>
+  <div class="slbl">Débito PIS/Cofins — por Empresa</div>
+  <div class="tcard"><div class="tscroll"><table>
+    <thead><tr><th>Empresa</th><th class="r">Base Vendas</th><th class="r">Déb. Vendas</th><th class="r">Dev. Compra</th><th class="r">Out. Saídas</th><th class="r">LC 224/2025</th><th class="r">Total Débito</th></tr></thead>
+    <tbody id="tb-deb-pis"></tbody>
+    <tfoot><tr><td>TOTAL</td><td class="r" id="tfp-bv">—</td><td class="r" id="tfp-dv">—</td>
+      <td class="r" id="tfp-dc">—</td><td class="r" id="tfp-os">—</td>
+      <td class="r" id="tfp-lc">—</td><td class="r" id="tfp-td">—</td></tr></tfoot>
+  </table></div></div>
+  <div class="slbl">Crédito PIS/Cofins — por Empresa</div>
+  <div class="tcard"><div class="tscroll"><table>
+    <thead><tr><th>Empresa</th><th class="r">Créd. Compras</th><th class="r">Combustível</th><th class="r">Frete</th><th class="r">Energia</th><th class="r">Aluguel</th><th class="r">Etiquetas</th><th class="r">Dev. Venda</th><th class="r">Total Crédito</th></tr></thead>
+    <tbody id="tb-cred-pis"></tbody>
+    <tfoot><tr><td>TOTAL</td><td class="r" id="tfpc-cc">—</td><td class="r" id="tfpc-cb">—</td>
+      <td class="r" id="tfpc-fr">—</td><td class="r" id="tfpc-en">—</td>
+      <td class="r" id="tfpc-al">—</td><td class="r" id="tfpc-et">—</td>
+      <td class="r" id="tfpc-dv">—</td><td class="r" id="tfpc-tc">—</td></tr></tfoot>
+  </table></div></div>
+</div>
+
+<script>
+// ── DADOS ─────────────────────────────────────────────────────────────────────
+const DADOS={"LOJA 01":{"2026-01":{"venda_bruta":2139441.39,"venda_liq":2129393.91,"venda_trib":740933.74,"venda_st":853877.6,"venda_isenta":544630.05,"dev_venda":10047.48,"deb_icms_vendas":81356.42,"deb_icms_transf":8809.85,"deb_icms_dev":553.19,"deb_icms_bonif":450.34,"deb_icms_outras":1106.24,"deb_icms_perdas":1113.21,"deb_icms_trocas":0.0,"deb_icms_difal":736.69,"deb_icms_ajuste":0.0,"total_deb_icms":103269.91,"venda_trib_pis":705434.33,"base_venda_pis":680760.77,"deb_pis":61770.25,"venda_aliq_zero":1434007.06,"deb_pis_dev":1.37,"deb_pis_outras":1200.12,"deb_pis_lc":0.0,"total_deb_pis":60388.91,"compras_bruto":2058837.1,"compras_liq":2047435.65,"compras_trib":635839.24,"compras_st":461753.92,"compras_isentas":961243.94,"cred_icms_compras":48679.92,"cred_icms_transf":677.01,"cred_icms_dev":312.7,"cred_icms_energia":2109.71,"cred_icms_comb":1111.79,"cred_icms_adrem":818.72,"cred_icms_imob":246.11,"cred_icms_bonif":334.45,"cred_icms_out":0.0,"cred_icms_frete":106.73,"cred_icms_glp":1109.22,"cred_icms_etiq":0.0,"cred_icms_excst":1954.06,"total_cred_icms":74276.58,"compras_trib_pis":355801.9,"base_comp_pis":327709.99,"cred_pis_compra":30313.17,"compras_aliq_zero":1701867.2,"compras_mei":1168.0,"cred_pis_nao_aprov":108.04,"cred_pis_dev":180.23,"cred_pis_comb":1530.07,"cred_pis_etiq":0.0,"cred_pis_frete":36.5,"cred_pis_energia":2753.77,"cred_pis_aluguel":4924.22,"total_cred_pis":43190.9},"2026-02":{"venda_bruta":2041741.88,"venda_liq":2034893.39,"venda_trib":730372.64,"venda_st":794385.49,"venda_isenta":516983.75,"dev_venda":6848.49,"deb_icms_vendas":81954.13,"deb_icms_transf":16876.2,"deb_icms_dev":856.75,"deb_icms_bonif":10.35,"deb_icms_outras":1368.25,"deb_icms_perdas":1342.52,"deb_icms_trocas":0.0,"deb_icms_difal":861.71,"deb_icms_ajuste":0.0,"total_deb_icms":103269.91,"venda_trib_pis":678426.5,"base_venda_pis":652853.03,"deb_pis":59189.45,"venda_aliq_zero":1363315.38,"deb_pis_dev":0.0,"deb_pis_outras":1199.45,"deb_pis_lc":0.0,"total_deb_pis":60388.91,"compras_bruto":2241513.13,"compras_liq":2227985.28,"compras_trib":613725.18,"compras_st":599414.58,"compras_isentas":1028373.37,"cred_icms_compras":48973.36,"cred_icms_transf":486.07,"cred_icms_dev":319.14,"cred_icms_energia":1036.91,"cred_icms_comb":1204.79,"cred_icms_adrem":892.14,"cred_icms_imob":256.78,"cred_icms_bonif":540.65,"cred_icms_out":89.7,"cred_icms_frete":36.95,"cred_icms_glp":1155.1,"cred_icms_etiq":0.0,"cred_icms_excst":1954.06,"total_cred_icms":74276.58,"compras_trib_pis":417685.85,"base_comp_pis":385838.42,"cred_pis_compra":35690.05,"compras_aliq_zero":1822977.28,"compras_mei":850.0,"cred_pis_nao_aprov":78.63,"cred_pis_dev":158.35,"cred_pis_comb":1599.45,"cred_pis_etiq":0.0,"cred_pis_frete":28.48,"cred_pis_energia":1353.45,"cred_pis_aluguel":5646.83,"total_cred_pis":43190.9},"2026-03":{"venda_bruta":2248654.71,"venda_liq":2241569.28,"venda_trib":792677.64,"venda_st":851661.98,"venda_isenta":604315.09,"dev_venda":7085.43,"deb_icms_vendas":88750.18,"deb_icms_transf":11037.43,"deb_icms_dev":483.59,"deb_icms_bonif":0.0,"deb_icms_outras":990.18,"deb_icms_perdas":1210.71,"deb_icms_trocas":0.0,"deb_icms_difal":126.19,"deb_icms_ajuste":0.0,"total_deb_icms":103269.91,"venda_trib_pis":740203.26,"base_venda_pis":707480.09,"deb_pis":64576.32,"venda_aliq_zero":1508451.45,"deb_pis_dev":70.44,"deb_pis_outras":809.34,"deb_pis_lc":0.0,"total_deb_pis":60388.91,"compras_bruto":2670808.45,"compras_liq":2622725.61,"compras_trib":670060.26,"compras_st":939376.69,"compras_isentas":1061371.5,"cred_icms_compras":53070.19,"cred_icms_transf":355.58,"cred_icms_dev":263.82,"cred_icms_energia":972.01,"cred_icms_comb":869.28,"cred_icms_adrem":703.72,"cred_icms_imob":257.06,"cred_icms_bonif":528.44,"cred_icms_out":0.0,"cred_icms_frete":95.98,"cred_icms_glp":806.21,"cred_icms_etiq":0.0,"cred_icms_excst":7816.22,"total_cred_icms":74276.58,"compras_trib_pis":518788.33,"base_comp_pis":479251.21,"cred_pis_compra":44330.74,"compras_aliq_zero":2150094.12,"compras_mei":1926.0,"cred_pis_nao_aprov":178.15,"cred_pis_dev":203.36,"cred_pis_comb":1215.29,"cred_pis_etiq":230.88,"cred_pis_frete":46.73,"cred_pis_energia":1268.74,"cred_pis_aluguel":6220.35,"total_cred_pis":43190.9},"2026-04":{"venda_bruta":2266791.75,"venda_liq":2262995.76,"venda_trib":875152.97,"venda_st":780232.95,"venda_isenta":611405.83,"dev_venda":3795.99,"deb_icms_vendas":105129.01,"deb_icms_transf":13202.57,"deb_icms_dev":630.57,"deb_icms_bonif":0.0,"deb_icms_outras":764.04,"deb_icms_perdas":326.47,"deb_icms_trocas":0.0,"deb_icms_difal":713.91,"deb_icms_ajuste":0.0,"total_deb_icms":103269.91,"venda_trib_pis":720218.01,"base_venda_pis":686519.32,"deb_pis":62592.86,"venda_aliq_zero":1546573.74,"deb_pis_dev":700.13,"deb_pis_outras":256.39,"deb_pis_lc":730.01,"total_deb_pis":60388.91,"compras_bruto":2332505.04,"compras_liq":2323221.77,"compras_trib":770374.9,"compras_st":473270.2,"compras_isentas":1088859.94,"cred_icms_compras":58936.4,"cred_icms_transf":375.14,"cred_icms_dev":180.24,"cred_icms_energia":2108.45,"cred_icms_comb":1328.41,"cred_icms_adrem":618.5,"cred_icms_imob":273.32,"cred_icms_bonif":589.75,"cred_icms_out":0.56,"cred_icms_frete":0.0,"cred_icms_glp":760.33,"cred_icms_etiq":780.01,"cred_icms_excst":6625.37,"total_cred_icms":74276.58,"compras_trib_pis":385279.11,"base_comp_pis":351213.8,"cred_pis_compra":32487.28,"compras_aliq_zero":1946270.97,"compras_mei":954.96,"cred_pis_nao_aprov":88.33,"cred_pis_dev":102.53,"cred_pis_comb":1587.78,"cred_pis_etiq":328.69,"cred_pis_frete":0.0,"cred_pis_energia":2752.12,"cred_pis_aluguel":6279.81,"total_cred_pis":43190.9},"2026-05":{"venda_bruta":2527359.28,"venda_liq":2523387.95,"venda_trib":986433.27,"venda_st":868494.41,"venda_isenta":672431.6,"dev_venda":3971.33,"deb_icms_vendas":118050.08,"deb_icms_transf":12667.1,"deb_icms_dev":591.81,"deb_icms_bonif":0.0,"deb_icms_outras":330.52,"deb_icms_perdas":285.09,"deb_icms_trocas":0.0,"deb_icms_difal":713.91,"deb_icms_ajuste":0.0,"total_deb_icms":132638.51,"venda_trib_pis":812408.22,"base_venda_pis":771663.13,"deb_pis":70519.08,"venda_aliq_zero":1714951.06,"deb_pis_dev":556.26,"deb_pis_outras":350.16,"deb_pis_lc":0.0,"total_deb_pis":71425.5,"compras_bruto":2277381.61,"compras_liq":2264363.78,"compras_trib":815995.57,"compras_st":494930.78,"compras_isentas":966455.26,"cred_icms_compras":62025.46,"cred_icms_transf":80.1,"cred_icms_dev":163.47,"cred_icms_energia":1967.81,"cred_icms_comb":1377.19,"cred_icms_adrem":618.5,"cred_icms_imob":0.0,"cred_icms_bonif":534.13,"cred_icms_out":59.42,"cred_icms_frete":0.0,"cred_icms_glp":760.33,"cred_icms_etiq":64.8,"cred_icms_excst":6625.37,"total_cred_icms":74276.58,"compras_trib_pis":376198.4,"base_comp_pis":343635.71,"cred_pis_compra":31786.3,"compras_aliq_zero":1899311.93,"compras_mei":1871.28,"cred_pis_nao_aprov":173.09,"cred_pis_dev":168.98,"cred_pis_comb":1637.37,"cred_pis_etiq":27.31,"cred_pis_frete":0.0,"cred_pis_energia":2568.53,"cred_pis_aluguel":7002.4,"total_cred_pis":43190.9}},"LOJA 02":{"2026-01":{"venda_bruta":1048958.97,"venda_liq":1048200.04,"venda_trib":402992.76,"venda_st":423349.51,"venda_isenta":222616.7,"dev_venda":758.93,"deb_icms_vendas":41513.51,"deb_icms_transf":161.95,"deb_icms_dev":647.16,"deb_icms_bonif":225.17,"deb_icms_outras":71.91,"deb_icms_perdas":722.76,"deb_icms_trocas":0.0,"deb_icms_difal":111.55,"deb_icms_ajuste":0.0,"total_deb_icms":42401.06,"venda_trib_pis":347033.89,"base_venda_pis":328470.4,"deb_pis":30309.27,"venda_aliq_zero":701925.08,"deb_pis_dev":0.0,"deb_pis_outras":74.25,"deb_pis_lc":0.0,"total_deb_pis":29554.5,"compras_bruto":542644.82,"compras_liq":534102.46,"compras_trib":239241.17,"compras_st":216441.09,"compras_isentas":86962.56,"cred_icms_compras":16385.6,"cred_icms_transf":2721.42,"cred_icms_dev":57.54,"cred_icms_energia":688.49,"cred_icms_comb":38.44,"cred_icms_adrem":130.04,"cred_icms_imob":387.45,"cred_icms_bonif":54.12,"cred_icms_out":0.0,"cred_icms_frete":37.62,"cred_icms_glp":368.35,"cred_icms_etiq":0.0,"cred_icms_excst":1267.04,"total_cred_icms":34788.41,"compras_trib_pis":181482.58,"base_comp_pis":166638.66,"cred_pis_compra":15414.08,"compras_aliq_zero":360992.24,"compras_mei":170.0,"cred_pis_nao_aprov":15.72,"cred_pis_dev":23.68,"cred_pis_comb":298.69,"cred_pis_etiq":0.0,"cred_pis_frete":29.0,"cred_pis_energia":1642.33,"cred_pis_aluguel":2423.96,"total_cred_pis":23097.83},"2026-02":{"venda_bruta":1007030.36,"venda_liq":1005960.49,"venda_trib":393623.55,"venda_st":391565.46,"venda_isenta":221841.35,"dev_venda":1069.87,"deb_icms_vendas":41612.63,"deb_icms_transf":193.34,"deb_icms_dev":112.97,"deb_icms_bonif":0.0,"deb_icms_outras":372.97,"deb_icms_perdas":109.15,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":42401.06,"venda_trib_pis":334747.04,"base_venda_pis":319508.06,"deb_pis":29146.21,"venda_aliq_zero":672283.32,"deb_pis_dev":0.0,"deb_pis_outras":408.29,"deb_pis_lc":0.0,"total_deb_pis":29554.5,"compras_bruto":602744.82,"compras_liq":600155.09,"compras_trib":260538.19,"compras_st":245249.84,"compras_isentas":96956.79,"cred_icms_compras":20345.02,"cred_icms_transf":3082.45,"cred_icms_dev":39.92,"cred_icms_energia":1567.27,"cred_icms_comb":14.63,"cred_icms_adrem":147.22,"cred_icms_imob":405.87,"cred_icms_bonif":93.71,"cred_icms_out":1.68,"cred_icms_frete":52.85,"cred_icms_glp":425.34,"cred_icms_etiq":0.0,"cred_icms_excst":1267.04,"total_cred_icms":34788.41,"compras_trib_pis":198565.86,"base_comp_pis":180684.34,"cred_pis_compra":16713.3,"compras_aliq_zero":403940.96,"compras_mei":238.0,"cred_pis_nao_aprov":22.02,"cred_pis_dev":32.72,"cred_pis_comb":311.02,"cred_pis_etiq":0.0,"cred_pis_frete":40.74,"cred_pis_energia":2614.71,"cred_pis_aluguel":2791.54,"total_cred_pis":23097.83},"2026-03":{"venda_bruta":1110717.21,"venda_liq":1109604.39,"venda_trib":425843.38,"venda_st":430261.38,"venda_isenta":254612.45,"dev_venda":1112.82,"deb_icms_vendas":44479.58,"deb_icms_transf":633.74,"deb_icms_dev":395.04,"deb_icms_bonif":0.0,"deb_icms_outras":216.58,"deb_icms_perdas":2049.59,"deb_icms_trocas":0.0,"deb_icms_difal":183.62,"deb_icms_ajuste":0.0,"total_deb_icms":42401.06,"venda_trib_pis":360986.0,"base_venda_pis":343997.19,"deb_pis":31522.64,"venda_aliq_zero":749731.21,"deb_pis_dev":79.39,"deb_pis_outras":217.7,"deb_pis_lc":0.0,"total_deb_pis":29554.5,"compras_bruto":788420.67,"compras_liq":779147.65,"compras_trib":300375.99,"compras_st":380089.6,"compras_isentas":107955.08,"cred_icms_compras":22273.29,"cred_icms_transf":2272.82,"cred_icms_dev":74.32,"cred_icms_energia":1446.99,"cred_icms_comb":129.59,"cred_icms_adrem":139.52,"cred_icms_imob":387.65,"cred_icms_bonif":76.79,"cred_icms_out":0.0,"cred_icms_frete":29.66,"cred_icms_glp":403.1,"cred_icms_etiq":0.0,"cred_icms_excst":5068.15,"total_cred_icms":34788.41,"compras_trib_pis":237405.21,"base_comp_pis":219567.48,"cred_pis_compra":20309.99,"compras_aliq_zero":550657.46,"compras_mei":358.0,"cred_pis_nao_aprov":33.12,"cred_pis_dev":55.15,"cred_pis_comb":388.43,"cred_pis_etiq":33.3,"cred_pis_frete":22.86,"cred_pis_energia":2389.33,"cred_pis_aluguel":3079.15,"total_cred_pis":23097.83},"2026-04":{"venda_bruta":1138321.74,"venda_liq":1137474.64,"venda_trib":482888.53,"venda_st":385287.13,"venda_isenta":270146.08,"dev_venda":847.1,"deb_icms_vendas":56256.78,"deb_icms_transf":0.0,"deb_icms_dev":627.26,"deb_icms_bonif":0.0,"deb_icms_outras":549.53,"deb_icms_perdas":1041.31,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":42401.06,"venda_trib_pis":358942.56,"base_venda_pis":349160.49,"deb_pis":31136.13,"venda_aliq_zero":779379.18,"deb_pis_dev":576.06,"deb_pis_outras":585.16,"deb_pis_lc":534.26,"total_deb_pis":29554.5,"compras_bruto":692217.81,"compras_liq":683175.62,"compras_trib":337491.43,"compras_st":225576.0,"compras_isentas":129150.38,"cred_icms_compras":26708.42,"cred_icms_transf":3686.99,"cred_icms_dev":52.33,"cred_icms_energia":632.93,"cred_icms_comb":64.49,"cred_icms_adrem":110.74,"cred_icms_imob":433.64,"cred_icms_bonif":60.04,"cred_icms_out":1.1,"cred_icms_frete":0.0,"cred_icms_glp":334.99,"cred_icms_etiq":293.89,"cred_icms_excst":4713.93,"total_cred_icms":34788.41,"compras_trib_pis":225850.54,"base_comp_pis":204359.77,"cred_pis_compra":18903.28,"compras_aliq_zero":465433.27,"compras_mei":934.0,"cred_pis_nao_aprov":86.39,"cred_pis_dev":53.53,"cred_pis_comb":307.93,"cred_pis_etiq":123.84,"cred_pis_frete":0.0,"cred_pis_energia":1585.07,"cred_pis_aluguel":3156.49,"total_cred_pis":23097.83},"2026-05":{"venda_bruta":1327033.67,"venda_liq":1325634.46,"venda_trib":578634.12,"venda_st":440681.8,"venda_isenta":307717.75,"dev_venda":1399.21,"deb_icms_vendas":66425.42,"deb_icms_transf":25.63,"deb_icms_dev":374.97,"deb_icms_bonif":0.0,"deb_icms_outras":247.29,"deb_icms_perdas":1929.38,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":69002.69,"venda_trib_pis":427465.57,"base_venda_pis":408020.54,"deb_pis":37044.45,"venda_aliq_zero":899568.1,"deb_pis_dev":486.35,"deb_pis_outras":280.25,"deb_pis_lc":0.0,"total_deb_pis":37811.05,"compras_bruto":722148.47,"compras_liq":715058.27,"compras_trib":344074.94,"compras_st":245267.13,"compras_isentas":132806.4,"cred_icms_compras":25563.69,"cred_icms_transf":2749.73,"cred_icms_dev":76.52,"cred_icms_energia":595.93,"cred_icms_comb":119.49,"cred_icms_adrem":110.74,"cred_icms_imob":0.0,"cred_icms_bonif":71.79,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":334.99,"cred_icms_etiq":451.6,"cred_icms_excst":4713.93,"total_cred_icms":34788.41,"compras_trib_pis":204315.76,"base_comp_pis":187428.66,"cred_pis_compra":17337.15,"compras_aliq_zero":517147.39,"compras_mei":685.32,"cred_pis_nao_aprov":63.39,"cred_pis_dev":49.0,"cred_pis_comb":350.33,"cred_pis_etiq":190.3,"cred_pis_frete":0.0,"cred_pis_energia":1492.41,"cred_pis_aluguel":3678.64,"total_cred_pis":23097.83}},"LOJA 03":{"2026-01":{"venda_bruta":1396456.33,"venda_liq":1395369.84,"venda_trib":515195.35,"venda_st":530451.17,"venda_isenta":350809.81,"dev_venda":1086.49,"deb_icms_vendas":54294.73,"deb_icms_transf":40.95,"deb_icms_dev":359.32,"deb_icms_bonif":225.17,"deb_icms_outras":104.24,"deb_icms_perdas":28.6,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":54822.47,"venda_trib_pis":408057.04,"base_venda_pis":385278.4,"deb_pis":35588.37,"venda_aliq_zero":988399.29,"deb_pis_dev":0.0,"deb_pis_outras":49.88,"deb_pis_lc":0.0,"total_deb_pis":33193.37,"compras_bruto":740890.07,"compras_liq":733033.76,"compras_trib":316557.16,"compras_st":291665.3,"compras_isentas":132667.61,"cred_icms_compras":21250.22,"cred_icms_transf":2442.6,"cred_icms_dev":44.22,"cred_icms_energia":266.67,"cred_icms_comb":-123.72,"cred_icms_adrem":121.72,"cred_icms_imob":7.13,"cred_icms_bonif":111.39,"cred_icms_out":51.5,"cred_icms_frete":30.37,"cred_icms_glp":344.74,"cred_icms_etiq":0.0,"cred_icms_excst":1200.13,"total_cred_icms":36656.66,"compras_trib_pis":219546.27,"base_comp_pis":201755.07,"cred_pis_compra":18662.34,"compras_aliq_zero":520379.8,"compras_mei":964.0,"cred_pis_nao_aprov":89.17,"cred_pis_dev":25.18,"cred_pis_comb":171.91,"cred_pis_etiq":0.0,"cred_pis_frete":23.41,"cred_pis_energia":465.5,"cred_pis_aluguel":3226.79,"total_cred_pis":23702.55},"2026-02":{"venda_bruta":1280113.1,"venda_liq":1277623.52,"venda_trib":495047.14,"venda_st":465439.43,"venda_isenta":319626.53,"dev_venda":2489.58,"deb_icms_vendas":54021.44,"deb_icms_transf":225.69,"deb_icms_dev":196.77,"deb_icms_bonif":0.0,"deb_icms_outras":345.82,"deb_icms_perdas":32.75,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":54822.47,"venda_trib_pis":378549.4,"base_venda_pis":358847.21,"deb_pis":32766.57,"venda_aliq_zero":901563.7,"deb_pis_dev":0.0,"deb_pis_outras":426.8,"deb_pis_lc":0.0,"total_deb_pis":33193.37,"compras_bruto":779021.66,"compras_liq":772591.32,"compras_trib":332062.1,"compras_st":315499.85,"compras_isentas":131459.71,"cred_icms_compras":25467.77,"cred_icms_transf":4722.13,"cred_icms_dev":120.12,"cred_icms_energia":126.24,"cred_icms_comb":-123.72,"cred_icms_adrem":122.72,"cred_icms_imob":7.22,"cred_icms_bonif":29.25,"cred_icms_out":36.83,"cred_icms_frete":47.59,"cred_icms_glp":396.29,"cred_icms_etiq":0.0,"cred_icms_excst":1200.13,"total_cred_icms":36656.66,"compras_trib_pis":237952.9,"base_comp_pis":215479.25,"cred_pis_compra":19931.83,"compras_aliq_zero":540236.76,"compras_mei":832.0,"cred_pis_nao_aprov":76.96,"cred_pis_dev":37.58,"cred_pis_comb":210.88,"cred_pis_etiq":0.0,"cred_pis_frete":36.68,"cred_pis_energia":220.37,"cred_pis_aluguel":3545.41,"total_cred_pis":23702.55},"2026-03":{"venda_bruta":1445769.97,"venda_liq":1444355.17,"venda_trib":526432.26,"venda_st":531212.35,"venda_isenta":388125.36,"dev_venda":1414.8,"deb_icms_vendas":57977.07,"deb_icms_transf":283.23,"deb_icms_dev":163.73,"deb_icms_bonif":0.0,"deb_icms_outras":781.75,"deb_icms_perdas":604.58,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":54822.47,"venda_trib_pis":428719.56,"base_venda_pis":406926.24,"deb_pis":37247.82,"venda_aliq_zero":1017050.41,"deb_pis_dev":47.52,"deb_pis_outras":359.26,"deb_pis_lc":0.0,"total_deb_pis":33193.37,"compras_bruto":923133.67,"compras_liq":914921.7,"compras_trib":337858.52,"compras_st":430111.84,"compras_isentas":155163.31,"cred_icms_compras":25037.87,"cred_icms_transf":2413.32,"cred_icms_dev":53.71,"cred_icms_energia":323.92,"cred_icms_comb":-123.72,"cred_icms_adrem":122.72,"cred_icms_imob":7.02,"cred_icms_bonif":101.25,"cred_icms_out":0.0,"cred_icms_frete":28.06,"cred_icms_glp":350.69,"cred_icms_etiq":0.0,"cred_icms_excst":4800.55,"total_cred_icms":36656.66,"compras_trib_pis":285294.22,"base_comp_pis":264629.54,"cred_pis_compra":24478.23,"compras_aliq_zero":636723.95,"compras_mei":1115.5,"cred_pis_nao_aprov":103.18,"cred_pis_dev":55.28,"cred_pis_comb":175.73,"cred_pis_etiq":82.7,"cred_pis_frete":21.63,"cred_pis_energia":565.42,"cred_pis_aluguel":4008.09,"total_cred_pis":23702.55},"2026-04":{"venda_bruta":1418049.84,"venda_liq":1416912.49,"venda_trib":572535.36,"venda_st":462255.6,"venda_isenta":383258.88,"dev_venda":1137.35,"deb_icms_vendas":67509.65,"deb_icms_transf":0.0,"deb_icms_dev":161.32,"deb_icms_bonif":0.0,"deb_icms_outras":264.05,"deb_icms_perdas":84.68,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":54822.47,"venda_trib_pis":405566.04,"base_venda_pis":383700.61,"deb_pis":35062.5,"venda_aliq_zero":1012483.8,"deb_pis_dev":160.81,"deb_pis_outras":286.44,"deb_pis_lc":530.4,"total_deb_pis":33193.37,"compras_bruto":810896.23,"compras_liq":808208.36,"compras_trib":390776.46,"compras_st":242402.6,"compras_isentas":177717.17,"cred_icms_compras":28978.94,"cred_icms_transf":4062.47,"cred_icms_dev":59.96,"cred_icms_energia":502.41,"cred_icms_comb":-123.72,"cred_icms_adrem":123.72,"cred_icms_imob":7.07,"cred_icms_bonif":20.22,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":123.72,"cred_icms_etiq":192.24,"cred_icms_excst":4811.74,"total_cred_icms":36656.66,"compras_trib_pis":216131.56,"base_comp_pis":195782.81,"cred_pis_compra":18109.91,"compras_aliq_zero":593715.67,"compras_mei":1049.0,"cred_pis_nao_aprov":97.03,"cred_pis_dev":36.41,"cred_pis_comb":0.0,"cred_pis_etiq":81.01,"cred_pis_frete":0.0,"cred_pis_energia":876.98,"cred_pis_aluguel":3931.93,"total_cred_pis":23702.55},"2026-05":{"venda_bruta":1623693.04,"venda_liq":1622464.9,"venda_trib":686271.15,"venda_st":515325.58,"venda_isenta":422096.31,"dev_venda":1228.14,"deb_icms_vendas":78960.49,"deb_icms_transf":20.31,"deb_icms_dev":112.6,"deb_icms_bonif":0.0,"deb_icms_outras":422.24,"deb_icms_perdas":1395.51,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":80911.15,"venda_trib_pis":469843.61,"base_venda_pis":443660.84,"deb_pis":40548.96,"venda_aliq_zero":1153849.43,"deb_pis_dev":175.7,"deb_pis_outras":313.97,"deb_pis_lc":0.0,"total_deb_pis":41038.63,"compras_bruto":850313.23,"compras_liq":847045.95,"compras_trib":400557.87,"compras_st":275893.77,"compras_isentas":173861.59,"cred_icms_compras":27394.0,"cred_icms_transf":3312.56,"cred_icms_dev":80.73,"cred_icms_energia":349.18,"cred_icms_comb":120.07,"cred_icms_adrem":123.72,"cred_icms_imob":0.0,"cred_icms_bonif":148.7,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":123.72,"cred_icms_etiq":192.24,"cred_icms_excst":4811.74,"total_cred_icms":36656.66,"compras_trib_pis":216075.81,"base_comp_pis":197597.18,"cred_pis_compra":18277.74,"compras_aliq_zero":633131.82,"compras_mei":1105.6,"cred_pis_nao_aprov":102.27,"cred_pis_dev":44.04,"cred_pis_comb":187.92,"cred_pis_etiq":81.01,"cred_pis_frete":0.0,"cred_pis_energia":609.51,"cred_pis_aluguel":4502.34,"total_cred_pis":23702.55}},"LOJA 04":{"2026-01":{"venda_bruta":2067618.22,"venda_liq":2066761.67,"venda_trib":664793.01,"venda_st":874522.12,"venda_isenta":528303.09,"dev_venda":856.55,"deb_icms_vendas":79949.39,"deb_icms_transf":248.41,"deb_icms_dev":361.45,"deb_icms_bonif":225.17,"deb_icms_outras":56.65,"deb_icms_perdas":90.19,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":84419.88,"venda_trib_pis":665268.99,"base_venda_pis":626611.43,"deb_pis":57856.84,"venda_aliq_zero":1402349.23,"deb_pis_dev":0.0,"deb_pis_outras":104.71,"deb_pis_lc":0.0,"total_deb_pis":55651.08,"compras_bruto":1108762.45,"compras_liq":1098867.81,"compras_trib":399196.06,"compras_st":508748.65,"compras_isentas":200817.74,"cred_icms_compras":32422.28,"cred_icms_transf":3096.77,"cred_icms_dev":55.04,"cred_icms_energia":647.94,"cred_icms_comb":363.9,"cred_icms_adrem":305.62,"cred_icms_imob":0.0,"cred_icms_bonif":55.38,"cred_icms_out":14.4,"cred_icms_frete":37.87,"cred_icms_glp":511.52,"cred_icms_etiq":0.0,"cred_icms_excst":1540.92,"total_cred_icms":56381.08,"compras_trib_pis":352917.4,"base_comp_pis":323987.9,"cred_pis_compra":29968.88,"compras_aliq_zero":754353.05,"compras_mei":1492.0,"cred_pis_nao_aprov":138.01,"cred_pis_dev":43.08,"cred_pis_comb":486.78,"cred_pis_etiq":0.0,"cred_pis_frete":29.19,"cred_pis_energia":1390.27,"cred_pis_aluguel":4779.39,"total_cred_pis":34922.24},"2026-02":{"venda_bruta":1959096.9,"venda_liq":1957356.44,"venda_trib":670534.46,"venda_st":786863.29,"venda_isenta":501699.15,"dev_venda":1740.46,"deb_icms_vendas":82021.53,"deb_icms_transf":757.91,"deb_icms_dev":196.6,"deb_icms_bonif":0.0,"deb_icms_outras":310.42,"deb_icms_perdas":1133.42,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":84419.88,"venda_trib_pis":639710.12,"base_venda_pis":601288.78,"deb_pis":55294.97,"venda_aliq_zero":1319386.78,"deb_pis_dev":31.87,"deb_pis_outras":324.24,"deb_pis_lc":0.0,"total_deb_pis":55651.08,"compras_bruto":1255228.15,"compras_liq":1250650.23,"compras_trib":514448.18,"compras_st":515147.61,"compras_isentas":225632.36,"cred_icms_compras":40583.66,"cred_icms_transf":6008.37,"cred_icms_dev":92.23,"cred_icms_energia":571.91,"cred_icms_comb":260.59,"cred_icms_adrem":268.02,"cred_icms_imob":207.49,"cred_icms_bonif":355.21,"cred_icms_out":18.43,"cred_icms_frete":57.43,"cred_icms_glp":496.23,"cred_icms_etiq":0.0,"cred_icms_excst":1540.92,"total_cred_icms":56381.08,"compras_trib_pis":356084.15,"base_comp_pis":323093.99,"cred_pis_compra":29886.19,"compras_aliq_zero":897762.0,"compras_mei":1382.0,"cred_pis_nao_aprov":127.84,"cred_pis_dev":65.97,"cred_pis_comb":443.11,"cred_pis_etiq":0.0,"cred_pis_frete":44.27,"cred_pis_energia":1227.12,"cred_pis_aluguel":5431.66,"total_cred_pis":34922.24},"2026-03":{"venda_bruta":2093949.67,"venda_liq":2091109.91,"venda_trib":696665.31,"venda_st":824694.06,"venda_isenta":572590.3,"dev_venda":2839.76,"deb_icms_vendas":85186.15,"deb_icms_transf":943.4,"deb_icms_dev":298.82,"deb_icms_bonif":175.04,"deb_icms_outras":205.27,"deb_icms_perdas":1840.65,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":84419.88,"venda_trib_pis":671096.26,"base_venda_pis":633189.92,"deb_pis":58144.56,"venda_aliq_zero":1422853.41,"deb_pis_dev":127.74,"deb_pis_outras":297.77,"deb_pis_lc":0.0,"total_deb_pis":55651.08,"compras_bruto":1556291.02,"compras_liq":1547590.22,"compras_trib":553353.31,"compras_st":762357.99,"compras_isentas":240579.72,"cred_icms_compras":46097.95,"cred_icms_transf":2656.76,"cred_icms_dev":102.44,"cred_icms_energia":369.5,"cred_icms_comb":483.71,"cred_icms_adrem":420.97,"cred_icms_imob":203.77,"cred_icms_bonif":210.07,"cred_icms_out":0.0,"cred_icms_frete":68.52,"cred_icms_glp":750.6,"cred_icms_etiq":0.0,"cred_icms_excst":6163.67,"total_cred_icms":56381.08,"compras_trib_pis":507510.45,"base_comp_pis":470217.61,"cred_pis_compra":43495.13,"compras_aliq_zero":1047369.07,"compras_mei":1411.5,"cred_pis_nao_aprov":130.56,"cred_pis_dev":54.64,"cred_pis_comb":672.55,"cred_pis_etiq":82.7,"cred_pis_frete":52.81,"cred_pis_energia":792.83,"cred_pis_aluguel":5802.83,"total_cred_pis":34922.24},"2026-04":{"venda_bruta":2088640.92,"venda_liq":2083939.54,"venda_trib":784316.12,"venda_st":717063.51,"venda_isenta":587261.29,"dev_venda":4701.38,"deb_icms_vendas":105588.1,"deb_icms_transf":573.45,"deb_icms_dev":164.98,"deb_icms_bonif":0.0,"deb_icms_outras":446.0,"deb_icms_perdas":1213.01,"deb_icms_trocas":0.0,"deb_icms_difal":170.13,"deb_icms_ajuste":0.0,"total_deb_icms":84419.88,"venda_trib_pis":657355.76,"base_venda_pis":618777.31,"deb_pis":56684.57,"venda_aliq_zero":1431285.16,"deb_pis_dev":143.7,"deb_pis_outras":408.64,"deb_pis_lc":947.04,"total_deb_pis":55651.08,"compras_bruto":1242612.78,"compras_liq":1240320.88,"compras_trib":566263.58,"compras_st":408932.86,"compras_isentas":267416.34,"cred_icms_compras":46459.53,"cred_icms_transf":3280.29,"cred_icms_dev":193.78,"cred_icms_energia":556.37,"cred_icms_comb":266.04,"cred_icms_adrem":210.47,"cred_icms_imob":203.87,"cred_icms_bonif":72.17,"cred_icms_out":17.26,"cred_icms_frete":0.0,"cred_icms_glp":379.47,"cred_icms_etiq":320.74,"cred_icms_excst":5903.4,"total_cred_icms":56381.08,"compras_trib_pis":367766.25,"base_comp_pis":333998.08,"cred_pis_compra":30894.82,"compras_aliq_zero":874011.57,"compras_mei":834.96,"cred_pis_nao_aprov":77.23,"cred_pis_dev":55.69,"cred_pis_comb":396.86,"cred_pis_etiq":135.16,"cred_pis_frete":0.0,"cred_pis_energia":1193.79,"cred_pis_aluguel":5782.93,"total_cred_pis":34922.24},"2026-05":{"venda_bruta":2333757.22,"venda_liq":2332767.17,"venda_trib":912722.03,"venda_st":781787.14,"venda_isenta":639248.05,"dev_venda":990.05,"deb_icms_vendas":118785.93,"deb_icms_transf":324.16,"deb_icms_dev":231.86,"deb_icms_bonif":0.0,"deb_icms_outras":176.77,"deb_icms_perdas":788.26,"deb_icms_trocas":0.0,"deb_icms_difal":170.13,"deb_icms_ajuste":0.0,"total_deb_icms":120477.11,"venda_trib_pis":738335.07,"base_venda_pis":692008.54,"deb_pis":63572.75,"venda_aliq_zero":1595422.15,"deb_pis_dev":207.17,"deb_pis_outras":275.59,"deb_pis_lc":0.0,"total_deb_pis":64055.52,"compras_bruto":1220318.35,"compras_liq":1217796.36,"compras_trib":553995.06,"compras_st":390060.52,"compras_isentas":276262.77,"cred_icms_compras":45144.66,"cred_icms_transf":3283.62,"cred_icms_dev":66.48,"cred_icms_energia":466.8,"cred_icms_comb":412.56,"cred_icms_adrem":210.47,"cred_icms_imob":0.0,"cred_icms_bonif":135.37,"cred_icms_out":59.42,"cred_icms_frete":0.0,"cred_icms_glp":379.47,"cred_icms_etiq":318.83,"cred_icms_excst":5903.4,"total_cred_icms":56381.08,"compras_trib_pis":316048.35,"base_comp_pis":289365.01,"cred_pis_compra":26766.26,"compras_aliq_zero":903124.56,"compras_mei":1145.44,"cred_pis_nao_aprov":105.95,"cred_pis_dev":31.77,"cred_pis_comb":514.81,"cred_pis_etiq":134.35,"cred_pis_frete":0.0,"cred_pis_energia":1001.6,"cred_pis_aluguel":6473.43,"total_cred_pis":34922.24}},"LOJA 05":{"2026-01":{"venda_bruta":825793.17,"venda_liq":824996.8,"venda_trib":280120.66,"venda_st":331418.38,"venda_isenta":214254.13,"dev_venda":796.37,"deb_icms_vendas":29069.37,"deb_icms_transf":1012.85,"deb_icms_dev":611.23,"deb_icms_bonif":225.17,"deb_icms_outras":22.07,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":31397.85,"venda_trib_pis":254275.8,"base_venda_pis":240858.03,"deb_pis":22266.01,"venda_aliq_zero":571517.37,"deb_pis_dev":0.0,"deb_pis_outras":13.36,"deb_pis_lc":0.0,"total_deb_pis":22511.7,"compras_bruto":449003.16,"compras_liq":442761.26,"compras_trib":188028.82,"compras_st":170097.26,"compras_isentas":90877.08,"cred_icms_compras":13073.53,"cred_icms_transf":1336.21,"cred_icms_dev":61.74,"cred_icms_energia":598.24,"cred_icms_comb":-107.86,"cred_icms_adrem":105.86,"cred_icms_imob":6.86,"cred_icms_bonif":11.16,"cred_icms_out":0.0,"cred_icms_frete":25.89,"cred_icms_glp":273.13,"cred_icms_etiq":0.0,"cred_icms_excst":1009.32,"total_cred_icms":25710.28,"compras_trib_pis":137383.35,"base_comp_pis":125428.55,"cred_pis_compra":11602.14,"compras_aliq_zero":311415.81,"compras_mei":204.0,"cred_pis_nao_aprov":18.87,"cred_pis_dev":40.69,"cred_pis_comb":128.93,"cred_pis_etiq":0.0,"cred_pis_frete":19.96,"cred_pis_energia":1008.63,"cred_pis_aluguel":1908.3,"total_cred_pis":16614.6},"2026-02":{"venda_bruta":793918.11,"venda_liq":792364.93,"venda_trib":274883.83,"venda_st":312977.3,"venda_isenta":206056.98,"dev_venda":1553.18,"deb_icms_vendas":30428.22,"deb_icms_transf":416.39,"deb_icms_dev":242.22,"deb_icms_bonif":0.0,"deb_icms_outras":300.61,"deb_icms_perdas":10.41,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":31397.85,"venda_trib_pis":255361.27,"base_venda_pis":243309.94,"deb_pis":22224.28,"venda_aliq_zero":538556.84,"deb_pis_dev":5.53,"deb_pis_outras":281.89,"deb_pis_lc":0.0,"total_deb_pis":22511.7,"compras_bruto":454756.42,"compras_liq":449661.21,"compras_trib":175449.26,"compras_st":171802.22,"compras_isentas":107504.94,"cred_icms_compras":13669.73,"cred_icms_transf":2865.4,"cred_icms_dev":96.01,"cred_icms_energia":422.91,"cred_icms_comb":-85.71,"cred_icms_adrem":106.86,"cred_icms_imob":6.92,"cred_icms_bonif":41.48,"cred_icms_out":19.25,"cred_icms_frete":26.76,"cred_icms_glp":289.55,"cred_icms_etiq":0.0,"cred_icms_excst":1009.32,"total_cred_icms":25710.28,"compras_trib_pis":134546.12,"base_comp_pis":121332.31,"cred_pis_compra":11223.24,"compras_aliq_zero":319862.3,"compras_mei":348.0,"cred_pis_nao_aprov":32.19,"cred_pis_dev":55.77,"cred_pis_comb":157.89,"cred_pis_etiq":0.0,"cred_pis_frete":20.63,"cred_pis_energia":713.01,"cred_pis_aluguel":1908.3,"total_cred_pis":16614.6},"2026-03":{"venda_bruta":882155.49,"venda_liq":881496.99,"venda_trib":287144.59,"venda_st":349062.94,"venda_isenta":245947.96,"dev_venda":658.5,"deb_icms_vendas":31505.43,"deb_icms_transf":353.97,"deb_icms_dev":129.7,"deb_icms_bonif":0.0,"deb_icms_outras":327.22,"deb_icms_perdas":417.37,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":31397.85,"venda_trib_pis":273753.38,"base_venda_pis":262443.17,"deb_pis":23909.68,"venda_aliq_zero":608402.11,"deb_pis_dev":14.18,"deb_pis_outras":352.13,"deb_pis_lc":0.0,"total_deb_pis":22511.7,"compras_bruto":602050.02,"compras_liq":596159.2,"compras_trib":195881.93,"compras_st":289824.82,"compras_isentas":116343.27,"cred_icms_compras":14826.03,"cred_icms_transf":1953.29,"cred_icms_dev":34.4,"cred_icms_energia":237.9,"cred_icms_comb":-107.86,"cred_icms_adrem":106.86,"cred_icms_imob":6.75,"cred_icms_bonif":72.54,"cred_icms_out":0.0,"cred_icms_frete":99.38,"cred_icms_glp":271.37,"cred_icms_etiq":0.0,"cred_icms_excst":4037.25,"total_cred_icms":25710.28,"compras_trib_pis":158547.05,"base_comp_pis":147146.42,"cred_pis_compra":13611.04,"compras_aliq_zero":441972.47,"compras_mei":1530.5,"cred_pis_nao_aprov":141.57,"cred_pis_dev":21.79,"cred_pis_comb":126.81,"cred_pis_etiq":33.3,"cred_pis_frete":0.0,"cred_pis_energia":401.09,"cred_pis_aluguel":1908.3,"total_cred_pis":16614.6},"2026-04":{"venda_bruta":905404.9,"venda_liq":904471.22,"venda_trib":323334.9,"venda_st":329266.3,"venda_isenta":252803.7,"dev_venda":933.68,"deb_icms_vendas":38120.85,"deb_icms_transf":334.89,"deb_icms_dev":151.44,"deb_icms_bonif":0.0,"deb_icms_outras":338.23,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":31397.85,"venda_trib_pis":272173.6,"base_venda_pis":261201.62,"deb_pis":23722.17,"venda_aliq_zero":633231.3,"deb_pis_dev":218.82,"deb_pis_outras":220.16,"deb_pis_lc":346.04,"total_deb_pis":22511.7,"compras_bruto":533596.33,"compras_liq":529710.16,"compras_trib":240987.99,"compras_st":151866.05,"compras_isentas":140742.29,"cred_icms_compras":18336.05,"cred_icms_transf":2706.02,"cred_icms_dev":60.89,"cred_icms_energia":331.19,"cred_icms_comb":-60.87,"cred_icms_adrem":107.86,"cred_icms_imob":6.79,"cred_icms_bonif":27.67,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":286.51,"cred_icms_etiq":0.0,"cred_icms_excst":4147.68,"total_cred_icms":25710.28,"compras_trib_pis":145018.88,"base_comp_pis":130451.42,"cred_pis_compra":12066.76,"compras_aliq_zero":387561.45,"compras_mei":1016.0,"cred_pis_nao_aprov":93.98,"cred_pis_dev":39.99,"cred_pis_comb":173.94,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":558.37,"cred_pis_aluguel":0.0,"total_cred_pis":16614.6},"2026-05":{"venda_bruta":1014298.07,"venda_liq":1013327.0,"venda_trib":372795.17,"venda_st":359212.75,"venda_isenta":282290.15,"dev_venda":971.07,"deb_icms_vendas":44222.85,"deb_icms_transf":3.49,"deb_icms_dev":152.37,"deb_icms_bonif":0.0,"deb_icms_outras":134.95,"deb_icms_perdas":12.25,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":44525.91,"venda_trib_pis":320193.29,"base_venda_pis":304707.18,"deb_pis":27867.38,"venda_aliq_zero":694104.78,"deb_pis_dev":205.42,"deb_pis_outras":122.19,"deb_pis_lc":0.0,"total_deb_pis":28194.98,"compras_bruto":565278.43,"compras_liq":560675.75,"compras_trib":251049.64,"compras_st":168553.65,"compras_isentas":145675.14,"cred_icms_compras":18151.45,"cred_icms_transf":2658.72,"cred_icms_dev":45.73,"cred_icms_energia":210.06,"cred_icms_comb":-33.38,"cred_icms_adrem":107.86,"cred_icms_imob":0.0,"cred_icms_bonif":76.23,"cred_icms_out":59.42,"cred_icms_frete":0.0,"cred_icms_glp":286.51,"cred_icms_etiq":0.0,"cred_icms_excst":4147.68,"total_cred_icms":25710.28,"compras_trib_pis":141161.96,"base_comp_pis":127439.9,"cred_pis_compra":11788.19,"compras_aliq_zero":422382.27,"compras_mei":1734.2,"cred_pis_nao_aprov":160.41,"cred_pis_dev":32.09,"cred_pis_comb":185.16,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":354.15,"cred_pis_aluguel":4255.0,"total_cred_pis":16614.6}},"PRODUCAO":{"2026-01":{"venda_bruta":0.0,"venda_liq":0.0,"venda_trib":0.0,"venda_st":0.0,"venda_isenta":0.0,"dev_venda":0.0,"deb_icms_vendas":0.0,"deb_icms_transf":11493.3,"deb_icms_dev":0.0,"deb_icms_bonif":0.0,"deb_icms_outras":0.0,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":9584.84,"venda_trib_pis":0.0,"base_venda_pis":0.0,"deb_pis":0.0,"venda_aliq_zero":0.0,"deb_pis_dev":0.0,"deb_pis_outras":0.0,"deb_pis_lc":0.0,"total_deb_pis":0.0,"compras_bruto":98823.17,"compras_liq":98823.17,"compras_trib":85599.69,"compras_st":13223.48,"compras_isentas":0.0,"cred_icms_compras":8950.81,"cred_icms_transf":274.69,"cred_icms_dev":0.0,"cred_icms_energia":0.0,"cred_icms_comb":0.0,"cred_icms_adrem":0.0,"cred_icms_imob":0.0,"cred_icms_bonif":0.0,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":0.0,"cred_icms_etiq":0.0,"cred_icms_excst":0.0,"total_cred_icms":9124.54,"compras_trib_pis":54506.55,"base_comp_pis":47496.02,"cred_pis_compra":4393.38,"compras_aliq_zero":44316.62,"compras_mei":0.0,"cred_pis_nao_aprov":0.0,"cred_pis_dev":0.0,"cred_pis_comb":0.0,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":0.0,"cred_pis_aluguel":0.0,"total_cred_pis":4359.53},"2026-02":{"venda_bruta":0.0,"venda_liq":0.0,"venda_trib":0.0,"venda_st":0.0,"venda_isenta":0.0,"dev_venda":0.0,"deb_icms_vendas":0.0,"deb_icms_transf":9584.84,"deb_icms_dev":0.0,"deb_icms_bonif":0.0,"deb_icms_outras":0.0,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":9584.84,"venda_trib_pis":0.0,"base_venda_pis":0.0,"deb_pis":0.0,"venda_aliq_zero":0.0,"deb_pis_dev":0.0,"deb_pis_outras":0.0,"deb_pis_lc":0.0,"total_deb_pis":0.0,"compras_bruto":111689.84,"compras_liq":111689.84,"compras_trib":94505.77,"compras_st":16554.64,"compras_isentas":629.43,"cred_icms_compras":9987.12,"cred_icms_transf":1305.11,"cred_icms_dev":0.0,"cred_icms_energia":0.0,"cred_icms_comb":0.0,"cred_icms_adrem":0.0,"cred_icms_imob":0.0,"cred_icms_bonif":0.0,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":0.0,"cred_icms_etiq":0.0,"cred_icms_excst":0.0,"total_cred_icms":9124.54,"compras_trib_pis":65584.41,"base_comp_pis":57581.55,"cred_pis_compra":5326.29,"compras_aliq_zero":46105.43,"compras_mei":0.0,"cred_pis_nao_aprov":0.0,"cred_pis_dev":0.0,"cred_pis_comb":0.0,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":0.0,"cred_pis_aluguel":0.0,"total_cred_pis":4359.53},"2026-03":{"venda_bruta":0.0,"venda_liq":0.0,"venda_trib":0.0,"venda_st":0.0,"venda_isenta":0.0,"dev_venda":0.0,"deb_icms_vendas":0.0,"deb_icms_transf":8265.47,"deb_icms_dev":0.0,"deb_icms_bonif":0.0,"deb_icms_outras":0.0,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":9584.84,"venda_trib_pis":0.0,"base_venda_pis":0.0,"deb_pis":0.0,"venda_aliq_zero":0.0,"deb_pis_dev":0.0,"deb_pis_outras":0.0,"deb_pis_lc":0.0,"total_deb_pis":0.0,"compras_bruto":103145.62,"compras_liq":103145.62,"compras_trib":86265.07,"compras_st":14320.0,"compras_isentas":2560.55,"cred_icms_compras":9322.03,"cred_icms_transf":3600.0,"cred_icms_dev":0.0,"cred_icms_energia":0.0,"cred_icms_comb":0.0,"cred_icms_adrem":0.0,"cred_icms_imob":0.0,"cred_icms_bonif":0.0,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":0.0,"cred_icms_etiq":0.0,"cred_icms_excst":0.0,"total_cred_icms":9124.54,"compras_trib_pis":54429.49,"base_comp_pis":47116.63,"cred_pis_compra":4358.29,"compras_aliq_zero":48716.13,"compras_mei":0.0,"cred_pis_nao_aprov":0.0,"cred_pis_dev":0.0,"cred_pis_comb":0.0,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":0.0,"cred_pis_aluguel":0.0,"total_cred_pis":4359.53},"2026-04":{"venda_bruta":0.0,"venda_liq":0.0,"venda_trib":0.0,"venda_st":0.0,"venda_isenta":0.0,"dev_venda":0.0,"deb_icms_vendas":0.0,"deb_icms_transf":8888.53,"deb_icms_dev":37.8,"deb_icms_bonif":0.0,"deb_icms_outras":0.0,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":9584.84,"venda_trib_pis":0.0,"base_venda_pis":314.96,"deb_pis":0.0,"venda_aliq_zero":0.0,"deb_pis_dev":29.13,"deb_pis_outras":0.0,"deb_pis_lc":0.0,"total_deb_pis":0.0,"compras_bruto":129135.17,"compras_liq":129135.17,"compras_trib":109758.19,"compras_st":14948.88,"compras_isentas":4428.1,"cred_icms_compras":12220.52,"cred_icms_transf":0.0,"cred_icms_dev":0.0,"cred_icms_energia":0.0,"cred_icms_comb":0.0,"cred_icms_adrem":0.0,"cred_icms_imob":0.0,"cred_icms_bonif":0.0,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":0.0,"cred_icms_etiq":0.0,"cred_icms_excst":0.0,"total_cred_icms":9124.54,"compras_trib_pis":81024.78,"base_comp_pis":70769.47,"cred_pis_compra":6546.18,"compras_aliq_zero":48110.39,"compras_mei":0.0,"cred_pis_nao_aprov":0.0,"cred_pis_dev":0.0,"cred_pis_comb":0.0,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":0.0,"cred_pis_aluguel":0.0,"total_cred_pis":4359.53},"2026-05":{"venda_bruta":0.0,"venda_liq":0.0,"venda_trib":0.0,"venda_st":0.0,"venda_isenta":0.0,"dev_venda":0.0,"deb_icms_vendas":0.0,"deb_icms_transf":9663.91,"deb_icms_dev":0.0,"deb_icms_bonif":0.0,"deb_icms_outras":0.0,"deb_icms_perdas":0.0,"deb_icms_trocas":0.0,"deb_icms_difal":0.0,"deb_icms_ajuste":0.0,"total_deb_icms":9663.91,"venda_trib_pis":0.0,"base_venda_pis":0.0,"deb_pis":0.0,"venda_aliq_zero":0.0,"deb_pis_dev":0.0,"deb_pis_outras":0.0,"deb_pis_lc":0.0,"total_deb_pis":0.0,"compras_bruto":99991.81,"compras_liq":99991.81,"compras_trib":84203.93,"compras_st":12058.88,"compras_isentas":3729.0,"cred_icms_compras":9124.54,"cred_icms_transf":0.0,"cred_icms_dev":0.0,"cred_icms_energia":0.0,"cred_icms_comb":0.0,"cred_icms_adrem":0.0,"cred_icms_imob":0.0,"cred_icms_bonif":0.0,"cred_icms_out":0.0,"cred_icms_frete":0.0,"cred_icms_glp":0.0,"cred_icms_etiq":0.0,"cred_icms_excst":0.0,"total_cred_icms":9124.54,"compras_trib_pis":54225.24,"base_comp_pis":47130.02,"cred_pis_compra":4359.53,"compras_aliq_zero":45766.57,"compras_mei":0.0,"cred_pis_nao_aprov":0.0,"cred_pis_dev":0.0,"cred_pis_comb":0.0,"cred_pis_etiq":0.0,"cred_pis_frete":0.0,"cred_pis_energia":0.0,"cred_pis_aluguel":0.0,"total_cred_pis":4359.53}}};
+const LOJAS=["LOJA 01", "LOJA 02", "LOJA 03", "LOJA 04", "LOJA 05", "PRODUCAO"];
+const PERIODOS=["2026-01", "2026-02", "2026-03", "2026-04", "2026-05"];
+const LABELS=["Jan", "Fev", "Mar", "Abr", "Mai"];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const R=v=>typeof v==='number'?v:0;
+const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const PCT=(v,t)=>t>0?(v/t*100).toFixed(1)+'%':'—';
+const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+const setH=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+const setC=(id,v)=>{const e=document.getElementById(id);if(e)e.className=v;};
+
+const TTP={backgroundColor:'#141a24',borderColor:'#243050',borderWidth:1,titleColor:'#f5a623',bodyColor:'#e4e8f2',
+  callbacks:{label:i=>' '+BRL(i.raw)}};
+const GR={color:'rgba(28,36,56,.6)'};
+const TK={color:'#56607c',font:{family:'JetBrains Mono',size:10}};
+let _CH={};
+const DC=id=>{if(_CH[id]){try{_CH[id].destroy();}catch(e){}delete _CH[id];}};
+let _SP={};
+
+// Rótulos nas barras via plugin inline
+const BAR_LABELS_PLUGIN = {
+  id:'barLabels',
+  afterDatasetsDraw(chart){
+    const {ctx,data}=chart;
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return;
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      meta.data.forEach((bar,i)=>{
+        const val=ds.data[i];
+        if(!val||val<0) return;
+        ctx.save();
+        ctx.fillStyle='rgba(228,232,242,.75)';
+        ctx.font='bold 9px JetBrains Mono';
+        ctx.textAlign='center';
+        ctx.textBaseline='bottom';
+        const txt='R$'+(val>=1000000?(val/1000000).toFixed(1)+'M':(val/1000).toFixed(0)+'k');
+        ctx.fillText(txt, bar.x, bar.y-2);
+        ctx.restore();
+      });
+    });
+  }
+};
+
+function sparkline(id,data,color,labels){
+  const canvas=document.getElementById(id);
+  if(!canvas||!data||data.length<2)return;
+  if(_SP[id]){try{_SP[id].destroy();}catch(e){}delete _SP[id];}
+  const ctx=canvas.getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,26);
+  const rgb=color.match(/\d+/g);
+  g.addColorStop(0,`rgba(${rgb[0]},${rgb[1]},${rgb[2]},.35)`);
+  g.addColorStop(1,`rgba(${rgb[0]},${rgb[1]},${rgb[2]},.0)`);
+  _SP[id]=new Chart(ctx,{
+    type:'line',
+    data:{labels:labels||data.map((_,i)=>i),datasets:[{data,borderColor:color,borderWidth:2,
+      pointRadius:0,fill:true,backgroundColor:g,tension:.4}]},
+    options:{responsive:false,animation:false,
+      plugins:{legend:{display:false},tooltip:{
+        enabled:true,mode:'index',intersect:false,
+        backgroundColor:'#141a24',borderColor:'#243050',borderWidth:1,
+        titleColor:'#f5a623',bodyColor:'#e4e8f2',
+        callbacks:{
+          title:its=>its[0]?.label||'',
+          label:i=>' '+BRL(i.raw)
+        }
+      }},
+      scales:{x:{display:false},y:{display:false}}
+    }
+  });
+}
+
+function varBadge(id,series,inv=false){
+  const el=document.getElementById(id);
+  if(!el||!series||series.length<2){if(el)el.style.display='none';return;}
+  const cur=series[series.length-1],ant=series[series.length-2];
+  if(!ant){el.style.display='none';return;}
+  const pct=(cur-ant)/Math.abs(ant)*100,up=pct>0,good=inv?!up:up;
+  el.textContent=(up?'▲':'▼')+' '+Math.abs(pct).toFixed(1)+'%';
+  el.className='kpi-var '+(good?'var-dn':'var-up');
+  el.style.display='inline-block';
+}
+
+// ── EMPRESA PICKER (multi-checkbox) ───────────────────────────────────────────
+let _selectedEmps=new Set(LOJAS); // todas selecionadas por padrão
+
+function buildEmpPicker(){
+  const container=document.getElementById('emp-items');
+  LOJAS.forEach(loja=>{
+    const div=document.createElement('div');
+    div.className='emp-picker-item';
+    div.onclick=()=>toggleEmp(loja);
+    div.id='ep-item-'+loja.replace(' ','_');
+    div.innerHTML=`<div class="ep-cb checked" id="ep-cb-${loja.replace(' ','_')}"></div>
+      <span class="ep-name">${loja}</span>
+      <span class="ep-tag">${loja==='PRODUCAO'?'Produção':'Loja'}</span>`;
+    container.appendChild(div);
+  });
+  updateEmpLabel();
+}
+function toggleEmpPicker(){
+  const dd=document.getElementById('emp-dropdown');
+  const arrow=document.getElementById('emp-arrow');
+  const open=dd.classList.toggle('open');
+  arrow.style.transform=open?'rotate(180deg)':'';
+}
+function toggleEmp(loja){
+  if(_selectedEmps.has(loja)){
+    if(_selectedEmps.size<=1) return; // pelo menos 1 sempre
+    _selectedEmps.delete(loja);
+  } else {
+    _selectedEmps.add(loja);
+  }
+  const cb=document.getElementById('ep-cb-'+loja.replace(' ','_'));
+  if(cb) cb.className='ep-cb'+(_selectedEmps.has(loja)?' checked':'');
+  updateEmpLabel();
+  render();
+}
+function empSelectAll(){
+  LOJAS.forEach(l=>{
+    _selectedEmps.add(l);
+    const cb=document.getElementById('ep-cb-'+l.replace(' ','_'));
+    if(cb)cb.className='ep-cb checked';
+  });
+  updateEmpLabel();render();
+}
+function empClearAll(){
+  _selectedEmps=new Set([LOJAS[0]]); // mantém pelo menos a primeira
+  LOJAS.forEach(l=>{
+    const cb=document.getElementById('ep-cb-'+l.replace(' ','_'));
+    if(cb)cb.className='ep-cb'+(l===LOJAS[0]?' checked':'');
+  });
+  updateEmpLabel();render();
+}
+function updateEmpLabel(){
+  const lbl=document.getElementById('emp-label');
+  if(!lbl)return;
+  const n=_selectedEmps.size;
+  if(n===LOJAS.length) lbl.textContent='Todas';
+  else if(n===1) lbl.textContent=[..._selectedEmps][0];
+  else lbl.textContent=n+' selecionadas';
+}
+// Fechar dropdown ao clicar fora
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('emp-wrap');
+  if(wrap&&!wrap.contains(e.target)){
+    document.getElementById('emp-dropdown').classList.remove('open');
+    document.getElementById('emp-arrow').style.transform='';
+  }
+});
+
+// ── FILTRO DINÂMICO POR KPI ───────────────────────────────────────────────────
+let _filtros={com:null,icms:null,pis:null};
+
+// campo: chave usada no onclick | dados: campo real em DADOS[]
+const FILTRO_INFO={
+  // Comercial — mapeados para campos reais dos dados
+  fat_bruto:       {lbl:'Faturamento Bruto',      cor:'#f5a623', dados:'venda_bruta'},
+  fat_liq:         {lbl:'Faturamento Líquido',    cor:'#4fc3f7', dados:'venda_liq'},
+  dev_venda:       {lbl:'Devolução de Venda',     cor:'#ef5350', dados:'dev_venda'},
+  compras_bruto:   {lbl:'Total Compras',          cor:'#66bb6a', dados:'compras_bruto'},
+  venda_trib:      {lbl:'Venda Tributada',        cor:'#4fc3f7', dados:'venda_trib'},
+  venda_st:        {lbl:'Venda ST',               cor:'#ab47bc', dados:'venda_st'},
+  venda_isenta:    {lbl:'Venda Isenta',           cor:'#66bb6a', dados:'venda_isenta'},
+  // ICMS
+  venda_bruta:     {lbl:'Vendas Total',           cor:'#f5a623', dados:'venda_bruta'},
+  deb_icms_vendas: {lbl:'Débito s/ Vendas',       cor:'#ef5350', dados:'deb_icms_vendas'},
+  compras_trib:    {lbl:'Compras Tributadas',     cor:'#4fc3f7', dados:'compras_trib'},
+  compras_st:      {lbl:'Compras ST',             cor:'#ab47bc', dados:'compras_st'},
+  compras_isentas: {lbl:'Compras Isentas',        cor:'#66bb6a', dados:'compras_isentas'},
+  cred_icms_compras:{lbl:'Crédito s/ Compras',   cor:'#26c6da', dados:'cred_icms_compras'},
+  // PIS
+  venda_trib_pis:  {lbl:'Vendas Trib. PIS/Cofins',cor:'#4fc3f7', dados:'venda_trib_pis'},
+  venda_aliq_zero: {lbl:'Vendas Alíquota Zero',   cor:'#66bb6a', dados:'venda_aliq_zero'},
+  total_deb_pis:   {lbl:'Débito PIS/Cofins',      cor:'#f5a623', dados:'total_deb_pis'},
+  cred_pis_nao_aprov:{lbl:'Créd. Não Aproveitado',cor:'#ab47bc', dados:'cred_pis_nao_aprov'},
+  // PIS compras
+  compras_trib_pis:{lbl:'Compras Tributadas PIS', cor:'#4fc3f7', dados:'compras_trib_pis'},
+  base_comp_pis:   {lbl:'Base Crédito PIS',       cor:'#26c6da', dados:'base_comp_pis'},
+  cred_pis_compra: {lbl:'Crédito s/ Compras PIS', cor:'#66bb6a', dados:'cred_pis_compra'},
+  total_cred_pis:  {lbl:'Total Crédito PIS',      cor:'#3ecf8e', dados:'total_cred_pis'},
+};
+// Helper: pega o campo real de dados a partir da chave do FILTRO_INFO
+function getFI(campo){ return FILTRO_INFO[campo]?.dados||campo; }
+
+function setFiltro(aba,campo,el){
+  const pageId='page-'+(aba==='com'?'comercial':aba==='pis'?'piscofins':aba);
+  // Toggle: clicou no mesmo → limpar
+  if(_filtros[aba]===campo){clearFiltro(aba);return;}
+  _filtros[aba]=campo;
+  // Limpar highlight de todos os KPIs da página
+  document.querySelectorAll('#'+pageId+' .kpi.clickable').forEach(k=>k.classList.remove('active-kpi'));
+  if(el)el.classList.add('active-kpi');
+  // Mostrar barra de filtro ativo
+  const fi=document.getElementById(aba+'-filter-info');
+  const ft=document.getElementById(aba+'-filter-text');
+  if(fi)fi.classList.add('show');
+  if(ft)ft.textContent='Filtrando por: '+(FILTRO_INFO[campo]?.lbl||campo);
+  renderAtivePage();
+}
+function clearFiltro(aba){
+  const pageId='page-'+(aba==='com'?'comercial':aba==='pis'?'piscofins':aba);
+  _filtros[aba]=null;
+  document.querySelectorAll('#'+pageId+' .kpi.clickable').forEach(k=>k.classList.remove('active-kpi'));
+  const fi=document.getElementById(aba+'-filter-info');
+  if(fi)fi.classList.remove('show');
+  renderAtivePage();
+}
+
+// ── DADOS AGREGADOS ────────────────────────────────────────────────────────────
+function getEmps(){return [..._selectedEmps];}
+function getDados(){
+  const emps=getEmps();
+  const per=document.getElementById('sel-periodo').value;
+  const pers=per==='all'?PERIODOS:[per];
+  const agg={};
+  emps.forEach(l=>pers.forEach(p=>{
+    const d=DADOS[l]?.[p];if(!d)return;
+    Object.keys(d).forEach(k=>{agg[k]=(agg[k]||0)+R(d[k]);});
+  }));
+  return agg;
+}
+function getEmpsDados(){
+  const emps=getEmps();
+  const per=document.getElementById('sel-periodo').value;
+  const pers=per==='all'?PERIODOS:[per];
+  return emps.map(l=>{
+    const agg={};
+    pers.forEach(p=>{const d=DADOS[l]?.[p];if(!d)return;Object.keys(d).forEach(k=>{agg[k]=(agg[k]||0)+R(d[k]);});});
+    return {loja:l,...agg};
+  }).filter(d=>Object.keys(d).length>1);
+}
+function getSerie(campo){
+  const emps=getEmps();
+  return PERIODOS.map(p=>emps.reduce((s,l)=>s+R(DADOS[l]?.[p]?.[campo]),0));
+}
+
+// ── CHART HELPERS ─────────────────────────────────────────────────────────────
+function barChart(id,labels,datasets,opts={}){
+  DC(id);const canvas=document.getElementById(id);if(!canvas)return;
+  _CH[id]=new Chart(canvas,{
+    type:'bar',
+    plugins:[BAR_LABELS_PLUGIN],
+    data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#56607c',font:{family:'JetBrains Mono',size:10},boxWidth:9}},
+        tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}},
+      ...opts}
+  });
+}
+function donutChart(id,labels,values,colors){
+  DC(id);const canvas=document.getElementById(id);if(!canvas)return;
+  const total=values.reduce((a,b)=>a+b,0);
+  _CH[id]=new Chart(canvas,{type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:'#0f1319',borderWidth:2,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:9},boxWidth:8,padding:7}},
+        tooltip:{backgroundColor:'#141a24',borderColor:'#243050',borderWidth:1,titleColor:'#f5a623',bodyColor:'#e4e8f2',
+          callbacks:{label:i=>' '+i.label+': '+BRL(i.raw)+' ('+PCT(i.raw,total)+')'}}}}
+  });
+}
+function evolucaoFiltroChart(id,campo,cor,ld){
+  DC(id);const canvas=document.getElementById(id);if(!canvas)return;
+  const campoReal=getFI(campo); // usa campo real dos dados
+  const ser=getSerie(campoReal);
+  const info=FILTRO_INFO[campo];
+  // Gráfico 1: evolução temporal
+  _CH[id]=new Chart(canvas,{
+    type:'bar',plugins:[BAR_LABELS_PLUGIN],
+    data:{labels:LABELS,datasets:[{label:info?.lbl||campo,data:ser,
+      backgroundColor:hexToRgba(cor,0.72),
+      borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
+  });
+}
+function porEmpChart(id,campo,cor,ld){
+  DC(id);const canvas=document.getElementById(id);if(!canvas)return;
+  const campoReal=getFI(campo); // usa campo real dos dados
+  _CH[id]=new Chart(canvas,{type:'bar',plugins:[BAR_LABELS_PLUGIN],
+    data:{labels:ld.map(r=>r.loja),datasets:[{label:FILTRO_INFO[campo]?.lbl||campo,
+      data:ld.map(r=>R(r[campoReal])),backgroundColor:hexToRgba(cor,0.75),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v/1000).toFixed(0)+'k'}}}}
+  });
+}
+function propPorEmpChart(id,campo,ld){
+  DC(id);const canvas=document.getElementById(id);if(!canvas)return;
+  const campoReal=getFI(campo); // usa campo real dos dados
+  const colors=['rgba(245,166,35,.8)','rgba(79,195,247,.8)','rgba(102,187,106,.8)','rgba(171,71,188,.8)','rgba(239,83,80,.8)','rgba(38,198,218,.8)'];
+  const total=ld.reduce((s,r)=>s+R(r[campoReal]),0);
+  _CH[id]=new Chart(canvas,{type:'doughnut',
+    data:{labels:ld.map(r=>r.loja),datasets:[{data:ld.map(r=>R(r[campoReal])),backgroundColor:colors,borderColor:'#0f1319',borderWidth:2,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:9},boxWidth:8,padding:7}},
+        tooltip:{backgroundColor:'#141a24',borderColor:'#243050',borderWidth:1,titleColor:'#f5a623',bodyColor:'#e4e8f2',
+          callbacks:{label:i=>' '+i.label+': '+BRL(i.raw)+' ('+PCT(i.raw,total)+')'}}}}
+  });
+}
+
+// Converte cor hex para rgba string
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const sub=document.getElementById('sub-impostos');
+  sub.style.display=tab==='impostos'?'flex':'none';
+  if(tab==='comercial') showPage('page-comercial');
+  else{const a=document.querySelector('#sub-impostos .sub-btn.active');
+    const s=a?a.textContent.trim().toLowerCase():'icms';
+    showPage('page-'+(s.includes('pis')?'piscofins':'icms'));}
+}
+function switchSub(sub,btn){
+  document.querySelectorAll('#sub-impostos .sub-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');showPage('page-'+sub);
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  render();
+}
+function renderAtivePage(){
+  const a=document.querySelector('.page.active');
+  if(!a)return;
+  const id=a.id;
+  if(id==='page-comercial') renderComercial();
+  else if(id==='page-icms') renderICMS();
+  else if(id==='page-piscofins') renderPIS();
+}
+function initPeriodos(){
+  const sel=document.getElementById('sel-periodo');
+  while(sel.options.length>1)sel.remove(1);
+  PERIODOS.forEach((p,i)=>{
+    const opt=document.createElement('option');
+    opt.value=p;opt.textContent=LABELS[i]+' '+p.split('-')[0]+(i===PERIODOS.length-1?' 🔴':' ✓');
+    sel.appendChild(opt);
+  });
+  sel.value='all'; // padrão: todos os períodos
+}
+
+// ── RENDER COMERCIAL ──────────────────────────────────────────────────────────
+function renderComercial(){
+  const d=getDados(),ld=getEmpsDados();
+  const fi=_filtros.com;
+  const per=document.getElementById('sel-periodo').value;
+  const n=_selectedEmps.size;
+  const perLabel=per==='all'?'Todos':(LABELS[PERIODOS.indexOf(per)]||per)+' '+per.split('-')[0];
+  set('hdr-badge',(n===LOJAS.length?'Todas':n+' emps.')+' · '+perLabel);
+
+  const sF=getSerie('venda_bruta'),sL=getSerie('venda_liq'),sD=getSerie('dev_venda');
+  const sC=getSerie('compras_bruto'),sVT=getSerie('venda_trib'),sVS=getSerie('venda_st'),sVI=getSerie('venda_isenta');
+  sparkline('sp-com-fatbruto',sF,'rgb(245,166,35)',LABELS);sparkline('sp-com-fatliq',sL,'rgb(79,195,247)',LABELS);
+  sparkline('sp-com-dev',sD,'rgb(239,83,80)',LABELS);sparkline('sp-com-compras',sC,'rgb(102,187,106)',LABELS);
+  sparkline('sp-com-vtrib',sVT,'rgb(79,195,247)',LABELS);sparkline('sp-com-vst',sVS,'rgb(171,71,188)',LABELS);
+  sparkline('sp-com-visen',sVI,'rgb(102,187,106)',LABELS);
+  varBadge('var-com-fatbruto',sF);varBadge('var-com-fatliq',sL);varBadge('var-com-dev',sD,true);
+  varBadge('var-com-compras',sC);varBadge('var-com-vtrib',sVT);varBadge('var-com-vst',sVS);varBadge('var-com-visen',sVI);
+
+  set('c-fat-bruto',BRL(d.venda_bruta));set('c-fat-liq',BRL(d.venda_liq));
+  set('c-dev-venda',BRL(d.dev_venda));set('c-dev-pct',PCT(d.dev_venda,d.venda_bruta)+' sobre bruto');
+  set('c-compras',BRL(d.compras_bruto));
+  set('c-venda-trib',BRL(d.venda_trib));set('c-venda-st',BRL(d.venda_st));set('c-venda-isenta',BRL(d.venda_isenta));
+  set('c-trib-pct',PCT(d.venda_trib,d.venda_bruta));set('c-st-pct',PCT(d.venda_st,d.venda_bruta));
+  set('c-isen-pct',PCT(d.venda_isenta,d.venda_bruta));
+
+  let tb='',fB=0,fL=0,fD=0,fT=0,fS=0,fI=0;
+  ld.forEach(r=>{
+    fB+=r.venda_bruta;fL+=r.venda_liq;fD+=r.dev_venda;fT+=r.venda_trib;fS+=r.venda_st;fI+=r.venda_isenta;
+    tb+=`<tr><td><b>${r.loja}</b></td>
+      <td class="r">${BRL(r.venda_bruta)}</td><td class="r">${BRL(r.venda_liq)}</td>
+      <td class="r" style="color:#ef5350">${BRL(r.dev_venda)}</td>
+      <td class="r"><span class="tag tg-t">${BRL(r.venda_trib)}</span></td>
+      <td class="r"><span class="tag tg-s">${BRL(r.venda_st)}</span></td>
+      <td class="r"><span class="tag tg-i">${BRL(r.venda_isenta)}</span></td>
+      <td class="r">${PCT(r.venda_trib,r.venda_bruta)}</td></tr>`;
+  });
+  setH('tb-comercial',tb);
+  set('tf-bruto',BRL(fB));set('tf-liq',BRL(fL));set('tf-dev',BRL(fD));
+  set('tf-trib',BRL(fT));set('tf-st',BRL(fS));set('tf-isen',BRL(fI));set('tf-ptrib',PCT(fT,fB));
+
+  // Gráficos
+  if(fi){
+    const info=FILTRO_INFO[fi];
+    set('com-ch1-title',info.lbl+' — Evolução Mensal');
+    set('com-ch2-title',info.lbl+' — por Empresa');
+    evolucaoFiltroChart('ch-com-1',fi,info.cor,ld);
+    porEmpChart('ch-com-2',fi,info.cor,ld);
+  } else {
+    set('com-ch1-title','Faturamento Bruto — Evolução Mensal');
+    set('com-ch2-title','Composição das Vendas');
+    // Linha de tendência
+    const n2=sF.length,sx=n2*(n2-1)/2,sy=sF.reduce((a,b)=>a+b,0);
+    const sxx=n2*(n2-1)*(2*n2-1)/6,sxy=sF.reduce((s,v,i)=>s+i*v,0);
+    const bv=(n2*sxy-sx*sy)/(n2*sxx-sx*sx),av=(sy-bv*sx)/n2;
+    barChart('ch-com-1',LABELS,[
+      {label:'Faturamento Bruto',data:sF,backgroundColor:'rgba(245,166,35,.7)',borderRadius:5,order:2},
+      {label:'Fat. Líquido',data:sL,backgroundColor:'rgba(79,195,247,.4)',borderRadius:5,order:3},
+      {type:'line',label:'Tendência',data:sF.map((_,i)=>av+bv*i),borderColor:'rgba(245,166,35,.5)',
+        borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,tension:.4,order:1},
+    ]);
+    donutChart('ch-com-2',['Tributada','ST','Isenta'],
+      [d.venda_trib,d.venda_st,d.venda_isenta],
+      ['rgba(79,195,247,.8)','rgba(171,71,188,.8)','rgba(102,187,106,.8)']);
+  }
+}
+
+// ── RENDER ICMS ────────────────────────────────────────────────────────────────
+function renderICMS(){
+  const d=getDados(),ld=getEmpsDados(),fi=_filtros.icms;
+
+  // Sparklines com tooltip por mês
+  const sv=getSerie('venda_bruta'),svt=getSerie('venda_trib'),svs=getSerie('venda_st'),svi=getSerie('venda_isenta'),sdv=getSerie('deb_icms_vendas');
+  const sct=getSerie('compras_bruto'),sctrib=getSerie('compras_trib'),scst=getSerie('compras_st'),scis=getSerie('compras_isentas'),scc=getSerie('cred_icms_compras');
+  sparkline('sp-i-vtotal',sv,'rgb(245,166,35)',LABELS);sparkline('sp-i-vtrib',svt,'rgb(79,195,247)',LABELS);
+  sparkline('sp-i-vst',svs,'rgb(171,71,188)',LABELS);sparkline('sp-i-visen',svi,'rgb(102,187,106)',LABELS);
+  sparkline('sp-i-debvendas',sdv,'rgb(239,83,80)',LABELS);sparkline('sp-i-ctotal',sct,'rgb(245,166,35)',LABELS);
+  sparkline('sp-i-ctrib',sctrib,'rgb(79,195,247)',LABELS);sparkline('sp-i-cst',scst,'rgb(171,71,188)',LABELS);
+  sparkline('sp-i-cisen',scis,'rgb(102,187,106)',LABELS);sparkline('sp-i-credcomp',scc,'rgb(38,198,218)',LABELS);
+  varBadge('var-i-vtotal',sv);varBadge('var-i-debvendas',sdv,true);
+  varBadge('var-i-ctotal',sct);varBadge('var-i-credcomp',scc);
+
+  // KPIs vendas
+  set('i-venda-total',BRL(d.venda_bruta));set('i-venda-trib',BRL(d.venda_trib));
+  set('i-venda-st',BRL(d.venda_st));set('i-venda-isenta',BRL(d.venda_isenta));
+  set('i-deb-vendas',BRL(d.deb_icms_vendas));
+  set('i-vtrib-pct',PCT(d.venda_trib,d.venda_bruta));set('i-vst-pct',PCT(d.venda_st,d.venda_bruta));
+  set('i-visen-pct',PCT(d.venda_isenta,d.venda_bruta));
+
+  // KPIs compras
+  set('i-comp-total',BRL(d.compras_bruto));set('i-comp-trib',BRL(d.compras_trib));
+  set('i-comp-st',BRL(d.compras_st));set('i-comp-isen',BRL(d.compras_isentas));
+  set('i-cred-compras',BRL(d.cred_icms_compras));
+  set('i-ctrib-pct',PCT(d.compras_trib,d.compras_bruto));set('i-cst-pct',PCT(d.compras_st,d.compras_bruto));
+  set('i-cisen-pct',PCT(d.compras_isentas,d.compras_bruto));
+
+  // Saldo
+  const saldo=d.total_deb_icms-d.total_cred_icms;
+  set('i-deb-total',BRL(d.total_deb_icms));set('i-cred-total',BRL(d.total_cred_icms));
+  set('i-saldo',BRL(Math.abs(saldo)));
+  const sEl=document.getElementById('i-saldo');if(sEl)sEl.className='saldo-val '+(saldo>0?'s-pos':'s-neg');
+  set('i-saldo-sub',saldo>0?'⚠ a recolher':'✓ crédito a compensar');
+
+  // Tabelas
+  let htDI='',tDV=0,tTR=0,tDC=0,tOS=0,tDF=0,tTD=0;
+  ld.forEach(r=>{
+    const os=r.deb_icms_outras+r.deb_icms_perdas+r.deb_icms_trocas+r.deb_icms_bonif+r.deb_icms_ajuste;
+    tDV+=r.deb_icms_vendas;tTR+=r.deb_icms_transf;tDC+=r.deb_icms_dev;tOS+=os;tDF+=r.deb_icms_difal;tTD+=r.total_deb_icms;
+    htDI+=`<tr><td><b>${r.loja}</b></td><td class="r">${BRL(r.deb_icms_vendas)}</td>
+      <td class="r">${BRL(r.deb_icms_transf)}</td><td class="r">${BRL(r.deb_icms_dev)}</td>
+      <td class="r">${BRL(os)}</td><td class="r">${BRL(r.deb_icms_difal)}</td>
+      <td class="r" style="font-weight:700;color:#ef5350">${BRL(r.total_deb_icms)}</td></tr>`;
+  });
+  setH('tb-deb-icms',htDI);
+  set('tfi-dv',BRL(tDV));set('tfi-tr',BRL(tTR));set('tfi-dc',BRL(tDC));
+  set('tfi-os',BRL(tOS));set('tfi-df',BRL(tDF));set('tfi-td',BRL(tTD));
+
+  let htCI='',tcCC=0,tcEN=0,tcCB=0,tcGL=0,tcEX=0,tcOU=0,tcTC=0;
+  ld.forEach(r=>{
+    const ou=r.cred_icms_transf+r.cred_icms_dev+r.cred_icms_adrem+r.cred_icms_imob+r.cred_icms_bonif+r.cred_icms_out+r.cred_icms_frete+r.cred_icms_etiq;
+    tcCC+=r.cred_icms_compras;tcEN+=r.cred_icms_energia;tcCB+=r.cred_icms_comb;
+    tcGL+=r.cred_icms_glp;tcEX+=r.cred_icms_excst;tcOU+=ou;tcTC+=r.total_cred_icms;
+    htCI+=`<tr><td><b>${r.loja}</b></td><td class="r">${BRL(r.cred_icms_compras)}</td>
+      <td class="r">${BRL(r.cred_icms_energia)}</td><td class="r">${BRL(r.cred_icms_comb)}</td>
+      <td class="r">${BRL(r.cred_icms_glp)}</td><td class="r">${BRL(r.cred_icms_excst)}</td>
+      <td class="r">${BRL(ou)}</td>
+      <td class="r" style="font-weight:700;color:#66bb6a">${BRL(r.total_cred_icms)}</td></tr>`;
+  });
+  setH('tb-cred-icms',htCI);
+  set('tfc-cc',BRL(tcCC));set('tfc-en',BRL(tcEN));set('tfc-cb',BRL(tcCB));
+  set('tfc-gl',BRL(tcGL));set('tfc-ex',BRL(tcEX));set('tfc-ou',BRL(tcOU));set('tfc-tc',BRL(tcTC));
+
+  // Gráficos — dinâmicos conforme filtro
+  if(fi){
+    const info=FILTRO_INFO[fi];
+    const cor=info.cor;
+    set('icms-ch1-title',info.lbl+' — Evolução');
+    set('icms-ch2-title',info.lbl+' — por Empresa');
+    set('icms-ch3-title','Participação por Empresa');
+    document.getElementById('icms-ch1-dot').style.background=cor;
+    document.getElementById('icms-ch2-dot').style.background=cor;
+    document.getElementById('icms-ch3-dot').style.background=cor;
+    evolucaoFiltroChart('ch-icms-1',fi,cor,ld);
+    porEmpChart('ch-icms-2',fi,cor,ld);
+    propPorEmpChart('ch-icms-3',fi,ld);
+  } else {
+    set('icms-ch1-title','Débito ICMS — Composição');
+    set('icms-ch2-title','Crédito ICMS — Composição');
+    set('icms-ch3-title','Saldo ICMS — Evolução');
+    document.getElementById('icms-ch1-dot').style.background='#ef5350';
+    document.getElementById('icms-ch2-dot').style.background='#66bb6a';
+    document.getElementById('icms-ch3-dot').style.background='#f5a623';
+    donutChart('ch-icms-1',['Vendas','Transf.','Dev. Compra','DIFAL','Outros'],
+      [d.deb_icms_vendas,d.deb_icms_transf,d.deb_icms_dev,d.deb_icms_difal,d.deb_icms_outras+d.deb_icms_perdas+d.deb_icms_trocas+d.deb_icms_bonif],
+      ['rgba(239,83,80,.8)','rgba(245,166,35,.8)','rgba(171,71,188,.8)','rgba(38,198,218,.8)','rgba(86,96,124,.7)']);
+    donutChart('ch-icms-2',['Compras','Energia','Comb.','GLP','Excl.ST','Outros'],
+      [d.cred_icms_compras,d.cred_icms_energia,d.cred_icms_comb,d.cred_icms_glp,d.cred_icms_excst,d.cred_icms_transf+d.cred_icms_dev+d.cred_icms_adrem+d.cred_icms_bonif+d.cred_icms_out+d.cred_icms_frete+d.cred_icms_etiq],
+      ['rgba(102,187,106,.8)','rgba(79,195,247,.8)','rgba(245,166,35,.8)','rgba(171,71,188,.8)','rgba(38,198,218,.8)','rgba(86,96,124,.7)']);
+    const serDeb=getSerie('total_deb_icms'),serCred=getSerie('total_cred_icms');
+    barChart('ch-icms-3',LABELS,[
+      {label:'Débito',data:serDeb,backgroundColor:'rgba(239,83,80,.65)',borderRadius:4},
+      {label:'Crédito',data:serCred,backgroundColor:'rgba(102,187,106,.65)',borderRadius:4},
+      {type:'line',label:'Saldo',data:serDeb.map((v,i)=>v-serCred[i]),borderColor:'#f5a623',
+        backgroundColor:'rgba(245,166,35,.1)',borderWidth:2,pointRadius:4,fill:true,tension:.4},
+    ]);
+  }
+}
+
+// ── RENDER PIS/COFINS ─────────────────────────────────────────────────────────
+function renderPIS(){
+  const d=getDados(),ld=getEmpsDados(),fi=_filtros.pis;
+
+  const saldo=d.total_deb_pis-d.total_cred_pis;
+  set('p-deb-total',BRL(d.total_deb_pis));set('p-cred-total',BRL(d.total_cred_pis));
+  set('p-saldo',BRL(Math.abs(saldo)));
+  const pEl=document.getElementById('p-saldo');if(pEl)pEl.className='saldo-val '+(saldo>0?'s-pos':'s-neg');
+  set('p-saldo-sub',saldo>0?'⚠ a recolher':'✓ crédito a compensar');
+  set('p-venda-trib',BRL(d.venda_trib_pis));set('p-venda-zero',BRL(d.venda_aliq_zero));
+  set('p-deb-vendas',BRL(d.total_deb_pis));set('p-cred-nao-aprov',BRL(d.cred_pis_nao_aprov));
+  // KPIs compras PIS
+  set('p-comp-trib',  BRL(d.compras_trib_pis));
+  set('p-base-comp',  BRL(d.base_comp_pis));
+  set('p-cred-compra',BRL(d.cred_pis_compra));
+  set('p-cred-total-kpi',BRL(d.total_cred_pis));
+
+  const spvt=getSerie('venda_trib_pis'),spvz=getSerie('venda_aliq_zero');
+  const spdp=getSerie('total_deb_pis'),spna=getSerie('cred_pis_nao_aprov');
+  const spct=getSerie('compras_trib_pis'),spbc=getSerie('base_comp_pis');
+  const spcc=getSerie('cred_pis_compra'),sptc=getSerie('total_cred_pis');
+  sparkline('sp-p-vtrib',spvt,'rgb(79,195,247)',LABELS);sparkline('sp-p-vzero',spvz,'rgb(102,187,106)',LABELS);
+  sparkline('sp-p-deb',spdp,'rgb(245,166,35)',LABELS);sparkline('sp-p-nao',spna,'rgb(171,71,188)',LABELS);
+  sparkline('sp-p-ctrib',spct,'rgb(79,195,247)',LABELS);sparkline('sp-p-bcomp',spbc,'rgb(38,198,218)',LABELS);
+  sparkline('sp-p-credcomp',spcc,'rgb(102,187,106)',LABELS);sparkline('sp-p-credtotal',sptc,'rgb(62,207,142)',LABELS);
+  varBadge('var-p-deb',spdp,true);
+  varBadge('var-p-credcomp',spcc);varBadge('var-p-credtotal',sptc);
+
+  let htDP='',tpBV=0,tpDV=0,tpDC=0,tpOS=0,tpLC=0,tpTD=0;
+  ld.forEach(r=>{
+    tpBV+=r.base_venda_pis;tpDV+=r.deb_pis;tpDC+=r.deb_pis_dev;tpOS+=r.deb_pis_outras;tpLC+=r.deb_pis_lc;tpTD+=r.total_deb_pis;
+    htDP+=`<tr><td><b>${r.loja}</b></td><td class="r">${BRL(r.base_venda_pis)}</td>
+      <td class="r">${BRL(r.deb_pis)}</td><td class="r">${BRL(r.deb_pis_dev)}</td>
+      <td class="r">${BRL(r.deb_pis_outras)}</td><td class="r">${BRL(r.deb_pis_lc)}</td>
+      <td class="r" style="font-weight:700;color:#ef5350">${BRL(r.total_deb_pis)}</td></tr>`;
+  });
+  setH('tb-deb-pis',htDP);
+  set('tfp-bv',BRL(tpBV));set('tfp-dv',BRL(tpDV));set('tfp-dc',BRL(tpDC));
+  set('tfp-os',BRL(tpOS));set('tfp-lc',BRL(tpLC));set('tfp-td',BRL(tpTD));
+
+  let htCP='',tcpCC=0,tcpCB=0,tcpFR=0,tcpEN=0,tcpAL=0,tcpET=0,tcpDV=0,tcpTC=0;
+  ld.forEach(r=>{
+    tcpCC+=r.cred_pis_compra;tcpCB+=r.cred_pis_comb;tcpFR+=r.cred_pis_frete;
+    tcpEN+=r.cred_pis_energia;tcpAL+=r.cred_pis_aluguel;tcpET+=r.cred_pis_etiq;tcpDV+=r.cred_pis_dev;tcpTC+=r.total_cred_pis;
+    htCP+=`<tr><td><b>${r.loja}</b></td><td class="r">${BRL(r.cred_pis_compra)}</td>
+      <td class="r">${BRL(r.cred_pis_comb)}</td><td class="r">${BRL(r.cred_pis_frete)}</td>
+      <td class="r">${BRL(r.cred_pis_energia)}</td><td class="r">${BRL(r.cred_pis_aluguel)}</td>
+      <td class="r">${BRL(r.cred_pis_etiq)}</td><td class="r">${BRL(r.cred_pis_dev)}</td>
+      <td class="r" style="font-weight:700;color:#66bb6a">${BRL(r.total_cred_pis)}</td></tr>`;
+  });
+  setH('tb-cred-pis',htCP);
+  set('tfpc-cc',BRL(tcpCC));set('tfpc-cb',BRL(tcpCB));set('tfpc-fr',BRL(tcpFR));
+  set('tfpc-en',BRL(tcpEN));set('tfpc-al',BRL(tcpAL));set('tfpc-et',BRL(tcpET));
+  set('tfpc-dv',BRL(tcpDV));set('tfpc-tc',BRL(tcpTC));
+
+  // Gráficos dinâmicos
+  if(fi){
+    const info=FILTRO_INFO[fi];
+    set('pis-ch1-title',info.lbl+' — Evolução');
+    set('pis-ch2-title',info.lbl+' — por Empresa');
+    document.getElementById('pis-ch1-dot').style.background=info.cor;
+    document.getElementById('pis-ch2-dot').style.background=info.cor;
+    evolucaoFiltroChart('ch-pis-1',fi,info.cor,ld);
+    propPorEmpChart('ch-pis-2',fi,ld);
+  } else {
+    set('pis-ch1-title','Débito vs Crédito PIS/Cofins');
+    set('pis-ch2-title','Crédito PIS/Cofins — Composição');
+    document.getElementById('pis-ch1-dot').style.background='#ef5350';
+    document.getElementById('pis-ch2-dot').style.background='#66bb6a';
+    barChart('ch-pis-1',ld.map(r=>r.loja),[
+      {label:'Débito',data:ld.map(r=>r.total_deb_pis),backgroundColor:'rgba(239,83,80,.75)',borderRadius:4},
+      {label:'Crédito',data:ld.map(r=>r.total_cred_pis),backgroundColor:'rgba(102,187,106,.75)',borderRadius:4},
+    ]);
+    donutChart('ch-pis-2',['Compras','Aluguel','Energia','Comb.','Frete','Outros'],
+      [d.cred_pis_compra,d.cred_pis_aluguel,d.cred_pis_energia,d.cred_pis_comb,d.cred_pis_frete,d.cred_pis_dev+d.cred_pis_etiq],
+      ['rgba(102,187,106,.8)','rgba(245,166,35,.8)','rgba(79,195,247,.8)','rgba(171,71,188,.8)','rgba(38,198,218,.8)','rgba(86,96,124,.7)']);
+  }
+  const serDebP=getSerie('total_deb_pis'),serCredP=getSerie('total_cred_pis');
+  barChart('ch-pis-3',LABELS,[
+    {label:'Débito',data:serDebP,backgroundColor:'rgba(239,83,80,.65)',borderRadius:4},
+    {label:'Crédito',data:serCredP,backgroundColor:'rgba(102,187,106,.65)',borderRadius:4},
+    {type:'line',label:'Saldo',data:serDebP.map((v,i)=>v-serCredP[i]),borderColor:'#f5a623',
+      backgroundColor:'rgba(245,166,35,.1)',borderWidth:2,pointRadius:4,fill:true,tension:.4},
+  ]);
+}
+
+function render(){renderAtivePage();}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildEmpPicker();
+initPeriodos();
+render();
+</script>
+</body>
+</html>
