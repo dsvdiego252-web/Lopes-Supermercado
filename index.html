@@ -617,9 +617,23 @@ function sparkline(id,data,color,labels){
 
 function varBadge(id,series,inv=false){
   const el=document.getElementById(id);
-  if(!el||!series||series.length<2){if(el)el.style.display='none';return;}
-  const cur=series[series.length-1],ant=series[series.length-2];
-  if(!ant){el.style.display='none';return;}
+  if(!el){return;}
+  // Determinar cur e ant baseado no período selecionado
+  const per=document.getElementById('sel-periodo').value;
+  let cur,ant;
+  if(per==='all'){
+    // Todos: compara último vs penúltimo período
+    if(!series||series.length<2){el.style.display='none';return;}
+    cur=series[series.length-1];
+    ant=series[series.length-2];
+  } else {
+    // Período específico: compara com o anterior
+    const idx=PERIODOS.indexOf(per);
+    if(idx<0||!series||series.length<=idx){el.style.display='none';return;}
+    cur=series[idx];
+    ant=idx>0?series[idx-1]:null;
+  }
+  if(!ant||ant===0){el.style.display='none';return;}
   const pct=(cur-ant)/Math.abs(ant)*100,up=pct>0,good=inv?!up:up;
   el.textContent=(up?'▲':'▼')+' '+Math.abs(pct).toFixed(1)+'%';
   el.className='kpi-var '+(good?'var-dn':'var-up');
