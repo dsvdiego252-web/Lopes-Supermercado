@@ -459,22 +459,26 @@ tfoot td{
 }
 
 
-/* V6.2 - correção visual dos KPIs ao abrir em 'Todos'
-   Evita que os mini-gráficos dos cards aumentem a altura inicial. */
+/* V6.3 - ajuste equilibrado dos KPIs
+   Corrige a abertura em 'Todos' sem deixar a linha de variação pequena demais. */
 .kpi{
-  min-height:96px !important;
-  max-height:116px;
+  min-height:132px !important;
+  max-height:150px !important;
+  padding-bottom:10px !important;
 }
 .kpi-spark{
   display:block !important;
   width:100% !important;
-  height:32px !important;
-  max-height:32px !important;
-  min-height:32px !important;
-  margin-top:5px !important;
+  height:62px !important;
+  max-height:62px !important;
+  min-height:62px !important;
+  margin-top:8px !important;
+  opacity:.82 !important;
 }
 .kpi canvas.kpi-spark{
-  height:32px !important;
+  height:62px !important;
+  max-height:62px !important;
+  min-height:62px !important;
 }
 .kpi-grid.g4 .kpi,
 .kpi-grid.g3 .kpi,
@@ -483,13 +487,14 @@ tfoot td{
 }
 @media(max-width:900px){
   .kpi{
-    min-height:90px !important;
-    max-height:none;
+    min-height:122px !important;
+    max-height:142px !important;
   }
   .kpi-spark,
   .kpi canvas.kpi-spark{
-    height:28px !important;
-    max-height:28px !important;
+    height:54px !important;
+    max-height:54px !important;
+    min-height:54px !important;
   }
 }
 
@@ -1847,9 +1852,9 @@ document.addEventListener('msfullscreenchange', syncFullScreenButtonSafe);
 </script>
 
 
-<script id="fix-v62-kpi-inicial">
+<script id="fix-v63-kpi-equilibrado">
 (function(){
-  function resizeDashboardChartsV62(){
+  function resizeDashboardChartsV63(){
     try{
       if(typeof _CH !== 'undefined'){
         Object.keys(_CH).forEach(function(k){
@@ -1859,12 +1864,13 @@ document.addEventListener('msfullscreenchange', syncFullScreenButtonSafe);
     }catch(e){}
   }
   window.addEventListener('load', function(){
-    setTimeout(resizeDashboardChartsV62, 250);
-    setTimeout(resizeDashboardChartsV62, 900);
+    setTimeout(resizeDashboardChartsV63, 250);
+    setTimeout(resizeDashboardChartsV63, 900);
   });
   document.addEventListener('change', function(ev){
     if(ev.target && ev.target.id === 'sel-periodo'){
-      setTimeout(resizeDashboardChartsV62, 120);
+      setTimeout(resizeDashboardChartsV63, 120);
+      setTimeout(resizeDashboardChartsV63, 500);
     }
   });
 })();
