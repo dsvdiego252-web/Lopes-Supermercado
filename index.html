@@ -458,6 +458,41 @@ tfoot td{
   .brand-full{width:80px !important;max-width:34vw !important;}
 }
 
+
+/* V6.2 - correção visual dos KPIs ao abrir em 'Todos'
+   Evita que os mini-gráficos dos cards aumentem a altura inicial. */
+.kpi{
+  min-height:96px !important;
+  max-height:116px;
+}
+.kpi-spark{
+  display:block !important;
+  width:100% !important;
+  height:32px !important;
+  max-height:32px !important;
+  min-height:32px !important;
+  margin-top:5px !important;
+}
+.kpi canvas.kpi-spark{
+  height:32px !important;
+}
+.kpi-grid.g4 .kpi,
+.kpi-grid.g3 .kpi,
+.kpi-grid.g5 .kpi{
+  align-self:stretch;
+}
+@media(max-width:900px){
+  .kpi{
+    min-height:90px !important;
+    max-height:none;
+  }
+  .kpi-spark,
+  .kpi canvas.kpi-spark{
+    height:28px !important;
+    max-height:28px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1809,6 +1844,30 @@ function syncFullScreenButtonSafe(){
 document.addEventListener('fullscreenchange', syncFullScreenButtonSafe);
 document.addEventListener('webkitfullscreenchange', syncFullScreenButtonSafe);
 document.addEventListener('msfullscreenchange', syncFullScreenButtonSafe);
+</script>
+
+
+<script id="fix-v62-kpi-inicial">
+(function(){
+  function resizeDashboardChartsV62(){
+    try{
+      if(typeof _CH !== 'undefined'){
+        Object.keys(_CH).forEach(function(k){
+          try{ if(_CH[k] && typeof _CH[k].resize === 'function') _CH[k].resize(); }catch(e){}
+        });
+      }
+    }catch(e){}
+  }
+  window.addEventListener('load', function(){
+    setTimeout(resizeDashboardChartsV62, 250);
+    setTimeout(resizeDashboardChartsV62, 900);
+  });
+  document.addEventListener('change', function(ev){
+    if(ev.target && ev.target.id === 'sel-periodo'){
+      setTimeout(resizeDashboardChartsV62, 120);
+    }
+  });
+})();
 </script>
 
 </body>
