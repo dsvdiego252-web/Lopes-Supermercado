@@ -524,6 +524,20 @@ tfoot td{
   .resumo-headline{grid-template-columns:1fr}
 }
 
+/* V8 - ABA IMPOSTOS · RESUMO PROJEÇÃO */
+.projecao-input-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:12px 14px}
+.projecao-input-row label{font-family:var(--fm);font-size:11.5px;color:var(--text)}
+.projecao-input{width:64px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+  color:var(--text);font-family:var(--fm);font-size:13px;padding:5px 8px;text-align:center}
+.projecao-input:focus{outline:none;border-color:var(--accent)}
+.projecao-max{font-family:var(--fm);font-size:10.5px;color:var(--muted)}
+.projecao-tag{margin-left:auto;font-family:var(--fm);font-size:10px;color:#f5a623;
+  background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.22);border-radius:6px;padding:4px 8px}
+@media(max-width:680px){
+  .projecao-tag{margin-left:0}
+}
+
 </style>
 <!-- V6.6: saldo acumulado ICMS usa último período, não soma meses -->
 <!-- V6.7: destaque percentual margem após impostos -->
@@ -578,6 +592,7 @@ tfoot td{
   <button class="sub-btn active" data-page="icms" onclick="switchSub('icms',this)">ICMS</button>
   <button class="sub-btn" data-page="piscofins" onclick="switchSub('piscofins',this)">PIS / Cofins</button>
   <button class="sub-btn" data-page="resumo" onclick="switchSub('resumo',this)">📊 Resumo</button>
+  <button class="sub-btn" data-page="resumo-projecao" onclick="switchSub('resumo-projecao',this)">📈 Resumo Projeção</button>
 </div>
 
 <!-- ══ COMERCIAL ══ -->
@@ -1011,6 +1026,57 @@ tfoot td{
   </div>
 </div>
 
+<!-- ══ IMPOSTOS · RESUMO PROJEÇÃO ══ -->
+<div class="page" id="page-resumo-projecao">
+  <div id="projecao-capture" class="resumo-capture">
+    <div class="resumo-head">
+      <div>
+        <div class="resumo-title">📈 Resumo Projeção — Impostos</div>
+        <div class="resumo-sub" id="projecao-periodo-label">—</div>
+      </div>
+      <div class="action-bar" style="margin:0">
+        <button class="act-btn" id="projecao-print-btn" onclick="capturarProjecaoImpostos()">📸 Capturar Print</button>
+        <button class="act-btn" onclick="window.print()">🖨 Imprimir / PDF</button>
+      </div>
+    </div>
+
+    <div id="projecao-aviso" class="resumo-empty" style="display:none">
+      <span id="projecao-aviso-texto"></span>
+    </div>
+
+    <div id="projecao-conteudo">
+      <div class="projecao-input-row">
+        <label for="projecao-dias">📅 Dados atualizados até o dia</label>
+        <input type="number" id="projecao-dias" class="projecao-input" min="1" max="31" oninput="renderResumoProjecao()">
+        <span class="projecao-max" id="projecao-dias-max"></span>
+        <span class="projecao-tag">⚠ valores projetados — estimativa, não substitui o fechamento oficial</span>
+      </div>
+
+      <div class="resumo-headline" id="projecao-headline"></div>
+
+      <div class="resumo-cols">
+        <div class="resumo-card" style="--rc:#ef5350">
+          <h3>🧾 ICMS (projeção)</h3>
+          <table class="resumo-table">
+            <thead><tr><th></th><th class="r" id="projecao-icms-th-cur">Projeção</th><th class="r" id="projecao-icms-th-ant">Anterior</th><th class="r">Var.</th></tr></thead>
+            <tbody id="projecao-icms-tbody"></tbody>
+          </table>
+          <div class="resumo-insight" id="projecao-icms-insight"></div>
+        </div>
+
+        <div class="resumo-card" style="--rc:#ab47bc">
+          <h3>🧾 PIS / COFINS (projeção)</h3>
+          <table class="resumo-table">
+            <thead><tr><th></th><th class="r" id="projecao-pis-th-cur">Projeção</th><th class="r" id="projecao-pis-th-ant">Anterior</th><th class="r">Var.</th></tr></thead>
+            <tbody id="projecao-pis-tbody"></tbody>
+          </table>
+          <div class="resumo-insight" id="projecao-pis-insight"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
 // ── DADOS ─────────────────────────────────────────────────────────────────────
@@ -1383,6 +1449,7 @@ function renderAtivePage(){
   else if(id==='page-icms') renderICMS();
   else if(id==='page-piscofins') renderPIS();
   else if(id==='page-resumo') renderResumo();
+  else if(id==='page-resumo-projecao') renderResumoProjecao();
 }
 function initPeriodos(){
   const sel=document.getElementById('sel-periodo');
@@ -1995,9 +2062,9 @@ function renderResumo(){
   );
   setH('resumo-pis-insight',_insightPIS(dC,dA,cur.pcRec,ant.pcRec));
 }
-function capturarResumoImpostos(){
-  const el=document.getElementById('resumo-capture');
-  const btn=document.getElementById('resumo-print-btn');
+function _capturarPrint(captureId,btnId,labelId,prefixo){
+  const el=document.getElementById(captureId);
+  const btn=document.getElementById(btnId);
   if(!el)return;
   if(typeof html2canvas==='undefined'){
     alert('Não foi possível carregar o recurso de captura de imagem. Verifique a conexão com a internet e tente novamente.');
@@ -2006,10 +2073,10 @@ function capturarResumoImpostos(){
   const original=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
   html2canvas(el,{backgroundColor:'#090b0f',scale:2,useCORS:true}).then(canvas=>{
-    const perLbl=(document.getElementById('resumo-periodo-label')?.textContent||'resumo').replace(/[^a-zA-Z0-9]+/g,'_');
+    const perLbl=(document.getElementById(labelId)?.textContent||'resumo').replace(/[^a-zA-Z0-9]+/g,'_');
     const a=document.createElement('a');
     a.href=canvas.toDataURL('image/png');
-    a.download='Resumo_Impostos_'+perLbl+'.png';
+    a.download=prefixo+'_'+perLbl+'.png';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -2018,6 +2085,168 @@ function capturarResumoImpostos(){
   }).finally(()=>{
     if(btn){btn.disabled=false;btn.textContent=original;}
   });
+}
+function capturarResumoImpostos(){_capturarPrint('resumo-capture','resumo-print-btn','resumo-periodo-label','Resumo_Impostos');}
+function capturarProjecaoImpostos(){_capturarPrint('projecao-capture','projecao-print-btn','projecao-periodo-label','Resumo_Projecao_Impostos');}
+
+// ── RESUMO PROJEÇÃO (extrapola o mês vigente pelos dias já lançados) ───────────
+function _periodoAtualReal(){
+  const now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+}
+function _diasNoMes(periodoStr){
+  const [y,m]=periodoStr.split('-').map(Number);
+  return new Date(y,m,0).getDate();
+}
+function _projecaoDisponivel(){
+  const per=document.getElementById('sel-periodo').value;
+  const atual=_periodoAtualReal();
+  return per===atual && PERIODOS.includes(atual);
+}
+function _projecaoDefaultDias(atual,diasTotais){
+  let salvo=null;
+  try{salvo=localStorage.getItem('lopes_dias_projecao_'+atual);}catch(e){}
+  const hoje=new Date().getDate();
+  const base=salvo?parseInt(salvo,10):hoje;
+  return Math.min(Math.max(base||hoje,1),diasTotais);
+}
+// Injeta em DADOS um período sintético com os campos de fluxo escalados pelo fator dias;
+// saldo_acumulado_icms é um saldo (não um fluxo do mês) e por isso não é escalado.
+function _snapshotProjetado(periodoAtual,diasInformados,diasTotais){
+  const ratio=diasTotais/Math.max(1,diasInformados);
+  const PROJ_KEY='__PROJ__';
+  LOJAS.forEach(loja=>{
+    const base=DADOS[loja]?.[periodoAtual];
+    if(!base)return;
+    if(!DADOS[loja])DADOS[loja]={};
+    const escalado={};
+    Object.keys(base).forEach(k=>{escalado[k]=(k==='saldo_acumulado_icms')?R(base[k]):R(base[k])*ratio;});
+    DADOS[loja][PROJ_KEY]=escalado;
+  });
+  const selEl=document.getElementById('sel-periodo');
+  const prevValue=selEl.value;
+  const tempOpt=document.createElement('option');
+  tempOpt.value=PROJ_KEY;tempOpt.textContent='(projeção)';
+  selEl.appendChild(tempOpt);
+  selEl.value=PROJ_KEY;
+
+  const d=getDados();
+  const icmsRec=_calcICMSRecolherLopes().valor;
+  const pcRec=_calcPISCOFINSRecolher();
+
+  selEl.value=prevValue;
+  selEl.removeChild(tempOpt);
+  LOJAS.forEach(loja=>{if(DADOS[loja])delete DADOS[loja][PROJ_KEY];});
+
+  return {d,icmsRec,pcRec,ratio};
+}
+function _insightICMSProjecao(dCur,dAnt,icmsCur,icmsAnt){
+  const vFat=_rvar(dCur.venda_bruta,dAnt.venda_bruta);
+  const vTrib=_rvar(dCur.venda_trib,dAnt.venda_trib);
+  const cTrib=_rvar(dCur.compras_trib,dAnt.compras_trib);
+  const rec=_rvar(icmsCur,icmsAnt,true);
+  return `O faturamento <b>projetado</b> ${_direcao(vFat)} ${_fmtPctSigned(vFat)} em relação ao mês anterior. `
+    +`As vendas tributadas por ICMS (projetadas) ${_direcaoPl(vTrib)} ${_fmtPctSigned(vTrib)}, `
+    +`${vTrib.up?'pressionando o débito de ICMS para cima':vTrib.down?'reduzindo a pressão sobre o débito de ICMS':'sem impacto relevante no débito'}. `
+    +`Já as compras tributadas (projetadas) ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
+    +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
+    +`Com isso, a <b>projeção do ICMS a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+}
+function _insightPISProjecao(dCur,dAnt,pcCur,pcAnt){
+  const vTrib=_rvar(dCur.venda_trib_pis,dAnt.venda_trib_pis);
+  const cTrib=_rvar(dCur.compras_trib_pis,dAnt.compras_trib_pis);
+  const rec=_rvar(pcCur,pcAnt,true);
+  return `As vendas tributadas por PIS/Cofins (projetadas) ${_direcaoPl(vTrib)} ${_fmtPctSigned(vTrib)}, `
+    +`${vTrib.up?'pressionando o débito para cima':vTrib.down?'reduzindo a pressão sobre o débito':'sem impacto relevante no débito'}. `
+    +`As compras tributadas (projetadas) ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
+    +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
+    +`Com isso, a <b>projeção do PIS/Cofins a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+}
+let _projecaoUltimoPeriodo=null;
+function renderResumoProjecao(){
+  const avisoEl=document.getElementById('projecao-aviso');
+  const conteudoEl=document.getElementById('projecao-conteudo');
+  const atual=_periodoAtualReal();
+  const atualIdx=PERIODOS.indexOf(atual);
+
+  if(!_projecaoDisponivel()){
+    const disponivelNaPlanilha=atualIdx>=0;
+    const rotuloAtual=disponivelNaPlanilha?(LABELS[atualIdx]+'/'+atual.split('-')[0]):atual;
+    if(avisoEl){
+      avisoEl.style.display='block';
+      setH('projecao-aviso-texto', disponivelNaPlanilha
+        ? `Esta projeção só fica disponível quando o mês vigente (<b>${rotuloAtual}</b>) está selecionado no filtro de período, no topo da tela.`
+        : `O mês vigente (${rotuloAtual}) ainda não possui dados na planilha.`);
+    }
+    if(conteudoEl)conteudoEl.style.display='none';
+    set('projecao-periodo-label','—');
+    return;
+  }
+  const antIdx=atualIdx-1;
+  if(antIdx<0){
+    if(avisoEl){avisoEl.style.display='block';setH('projecao-aviso-texto','Sem mês anterior disponível para comparação.');}
+    if(conteudoEl)conteudoEl.style.display='none';
+    return;
+  }
+  if(avisoEl)avisoEl.style.display='none';
+  if(conteudoEl)conteudoEl.style.display='';
+
+  const antP=PERIODOS[antIdx];
+  const antLbl=LABELS[antIdx]+'/'+antP.split('-')[0];
+  const atualLbl=LABELS[atualIdx]+'/'+atual.split('-')[0];
+  const diasTotais=_diasNoMes(atual);
+
+  const inputEl=document.getElementById('projecao-dias');
+  if(_projecaoUltimoPeriodo!==atual){
+    inputEl.value=_projecaoDefaultDias(atual,diasTotais);
+    inputEl.max=diasTotais;inputEl.min=1;
+    _projecaoUltimoPeriodo=atual;
+  }
+  set('projecao-dias-max','de '+diasTotais+' dias do mês');
+  let diasInformados=parseInt(inputEl.value,10);
+  if(!diasInformados||diasInformados<1)diasInformados=1;
+  if(diasInformados>diasTotais)diasInformados=diasTotais;
+  try{localStorage.setItem('lopes_dias_projecao_'+atual,String(diasInformados));}catch(e){}
+
+  const proj=_snapshotProjetado(atual,diasInformados,diasTotais);
+  const ant=_snapshotPeriodo(antP);
+  const dC=proj.d,dA=ant.d;
+  const cargaCur=proj.icmsRec+proj.pcRec,cargaAnt=ant.icmsRec+ant.pcRec;
+
+  const n=_selectedEmps.size;
+  const empLabel=n===LOJAS.length?'Todas as empresas':(n===1?[..._selectedEmps][0]:n+' empresas selecionadas');
+  set('projecao-periodo-label', atualLbl+' — projeção ('+diasInformados+'/'+diasTotais+' dias, fator ×'+proj.ratio.toFixed(2)+') vs '+antLbl+' · '+empLabel);
+
+  set('projecao-icms-th-cur',atualLbl+' (proj.)');set('projecao-icms-th-ant',antLbl);
+  set('projecao-pis-th-cur',atualLbl+' (proj.)');set('projecao-pis-th-ant',antLbl);
+
+  setH('projecao-headline',
+    _resumoHeadCard('#f5a623','Faturamento (projeção)',dC.venda_bruta,dA.venda_bruta,false)+
+    _resumoHeadCard('#ef5350','ICMS a Recolher (projeção)',proj.icmsRec,ant.icmsRec,true)+
+    _resumoHeadCard('#ab47bc','PIS/Cofins a Recolher (projeção)',proj.pcRec,ant.pcRec,true)+
+    _resumoHeadCard('#4fc3f7','Carga Fiscal Total (projeção)',cargaCur,cargaAnt,true)
+  );
+
+  setH('projecao-icms-tbody',
+    _resumoRow('Faturamento (Vendas)',dC.venda_bruta,dA.venda_bruta)+
+    _resumoRow('Vendas Tributadas ICMS',dC.venda_trib,dA.venda_trib)+
+    _resumoRow('Compras Total',dC.compras_bruto,dA.compras_bruto)+
+    _resumoRow('Compras Tributadas ICMS',dC.compras_trib,dA.compras_trib)+
+    _resumoRow('Débito ICMS',dC.total_deb_icms,dA.total_deb_icms,true)+
+    _resumoRow('Crédito ICMS',dC.total_cred_icms,dA.total_cred_icms)+
+    _resumoRow('ICMS a Recolher',proj.icmsRec,ant.icmsRec,true)
+  );
+  setH('projecao-icms-insight',_insightICMSProjecao(dC,dA,proj.icmsRec,ant.icmsRec));
+
+  setH('projecao-pis-tbody',
+    _resumoRow('Vendas Tributadas PIS/Cofins',dC.venda_trib_pis,dA.venda_trib_pis)+
+    _resumoRow('Vendas Alíquota Zero',dC.venda_aliq_zero,dA.venda_aliq_zero)+
+    _resumoRow('Compras Tributadas PIS/Cofins',dC.compras_trib_pis,dA.compras_trib_pis)+
+    _resumoRow('Débito PIS/Cofins',dC.total_deb_pis,dA.total_deb_pis,true)+
+    _resumoRow('Crédito PIS/Cofins',dC.total_cred_pis,dA.total_cred_pis)+
+    _resumoRow('PIS/Cofins a Recolher',proj.pcRec,ant.pcRec,true)
+  );
+  setH('projecao-pis-insight',_insightPISProjecao(dC,dA,proj.pcRec,ant.pcRec));
 }
 function _renderFiscalGerencialComercial(){
   const d=getDados();const icms=_calcICMSRecolherLopes();const pc=_calcPISCOFINSRecolher();
