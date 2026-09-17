@@ -1930,9 +1930,12 @@ function _calcICMSRecolherLopes(){
   if(prodSelecionada&&DADOS['PRODUCAO']){pers.forEach(p=>{const d=DADOS['PRODUCAO']?.[p];if(!d)return;prodST+=R(d.total_deb_icms_st);prodDeb+=R(d.total_deb_icms);prodCred+=R(d.total_cred_icms);if(Object.prototype.hasOwnProperty.call(d,'saldo_acumulado_icms')){prodSaldo=R(d.saldo_acumulado_icms);encontrouSaldoProd=true;}});}
   if(!encontrouSaldoProd)prodSaldo=0;
   const prodTemSaldo=Math.abs(prodSaldo)>0.005;
-  let total=saldoLojas+prodST;
-  if(prodSelecionada&&!prodTemSaldo)total+=prodDeb-prodCred;
-  return {valor:Math.max(0,total),saldo:total,prodTemSaldo,prodSaldo,prodST,saldoLojas};
+  let semST=saldoLojas;
+  if(prodSelecionada&&!prodTemSaldo)semST+=prodDeb-prodCred;
+  let total=semST+prodST;
+  const icmsST=Math.max(0,prodST);
+  const icmsSemST=Math.max(0,Math.max(0,total)-icmsST);
+  return {valor:Math.max(0,total),saldo:total,prodTemSaldo,prodSaldo,prodST,saldoLojas,icmsST,icmsSemST};
 }
 function _calcPISCOFINSRecolher(){const d=getDados();return Math.max(0,R(d.total_deb_pis)-R(d.total_cred_pis));}
 
@@ -1951,10 +1954,10 @@ function _snapshotPeriodo(p){
   const prev=selEl.value;
   selEl.value=p;
   const d=getDados();
-  const icmsRec=_calcICMSRecolherLopes().valor;
+  const icms=_calcICMSRecolherLopes();
   const pcRec=_calcPISCOFINSRecolher();
   selEl.value=prev;
-  return {d,icmsRec,pcRec};
+  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec};
 }
 function _rvar(curVal,antVal,inv){
   const cur=R(curVal),ant=R(antVal);
@@ -1998,7 +2001,7 @@ function _insightICMS(dCur,dAnt,icmsCur,icmsAnt){
     +`${vTrib.up?'pressionando o débito de ICMS para cima':vTrib.down?'reduzindo a pressão sobre o débito de ICMS':'sem impacto relevante no débito'}. `
     +`Já as compras tributadas ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
     +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
-    +`Como resultado, o <b>ICMS a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+    +`Como resultado, o <b>ICMS + ICMS-ST a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
 }
 function _insightPIS(dCur,dAnt,pcCur,pcAnt){
   const vTrib=_rvar(dCur.venda_trib_pis,dAnt.venda_trib_pis);
@@ -2036,7 +2039,7 @@ function renderResumo(){
 
   setH('resumo-headline',
     _resumoHeadCard('#f5a623','Faturamento',dC.venda_bruta,dA.venda_bruta,false)+
-    _resumoHeadCard('#ef5350','ICMS a Recolher',cur.icmsRec,ant.icmsRec,true)+
+    _resumoHeadCard('#ef5350','ICMS + ICMS-ST a Recolher',cur.icmsRec,ant.icmsRec,true)+
     _resumoHeadCard('#ab47bc','PIS/Cofins a Recolher',cur.pcRec,ant.pcRec,true)+
     _resumoHeadCard('#4fc3f7','Carga Fiscal Total',cargaCur,cargaAnt,true)
   );
@@ -2048,7 +2051,9 @@ function renderResumo(){
     _resumoRow('Compras Tributadas ICMS',dC.compras_trib,dA.compras_trib)+
     _resumoRow('Débito ICMS',dC.total_deb_icms,dA.total_deb_icms,true)+
     _resumoRow('Crédito ICMS',dC.total_cred_icms,dA.total_cred_icms)+
-    _resumoRow('ICMS a Recolher',cur.icmsRec,ant.icmsRec,true)
+    _resumoRow('ICMS a Recolher (sem ST)',cur.icmsSemST,ant.icmsSemST,true)+
+    _resumoRow('ICMS-ST (Produção)',cur.icmsST,ant.icmsST,true)+
+    _resumoRow('ICMS + ICMS-ST a Recolher',cur.icmsRec,ant.icmsRec,true)
   );
   setH('resumo-icms-insight',_insightICMS(dC,dA,cur.icmsRec,ant.icmsRec));
 
@@ -2131,14 +2136,14 @@ function _snapshotProjetado(periodoAtual,diasInformados,diasTotais){
   selEl.value=PROJ_KEY;
 
   const d=getDados();
-  const icmsRec=_calcICMSRecolherLopes().valor;
+  const icms=_calcICMSRecolherLopes();
   const pcRec=_calcPISCOFINSRecolher();
 
   selEl.value=prevValue;
   selEl.removeChild(tempOpt);
   LOJAS.forEach(loja=>{if(DADOS[loja])delete DADOS[loja][PROJ_KEY];});
 
-  return {d,icmsRec,pcRec,ratio};
+  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec,ratio};
 }
 function _insightICMSProjecao(dCur,dAnt,icmsCur,icmsAnt){
   const vFat=_rvar(dCur.venda_bruta,dAnt.venda_bruta);
@@ -2150,7 +2155,7 @@ function _insightICMSProjecao(dCur,dAnt,icmsCur,icmsAnt){
     +`${vTrib.up?'pressionando o débito de ICMS para cima':vTrib.down?'reduzindo a pressão sobre o débito de ICMS':'sem impacto relevante no débito'}. `
     +`Já as compras tributadas (projetadas) ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
     +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
-    +`Com isso, a <b>projeção do ICMS a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+    +`Com isso, a <b>projeção do ICMS + ICMS-ST a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
 }
 function _insightPISProjecao(dCur,dAnt,pcCur,pcAnt){
   const vTrib=_rvar(dCur.venda_trib_pis,dAnt.venda_trib_pis);
@@ -2222,7 +2227,7 @@ function renderResumoProjecao(){
 
   setH('projecao-headline',
     _resumoHeadCard('#f5a623','Faturamento (projeção)',dC.venda_bruta,dA.venda_bruta,false)+
-    _resumoHeadCard('#ef5350','ICMS a Recolher (projeção)',proj.icmsRec,ant.icmsRec,true)+
+    _resumoHeadCard('#ef5350','ICMS + ICMS-ST a Recolher (projeção)',proj.icmsRec,ant.icmsRec,true)+
     _resumoHeadCard('#ab47bc','PIS/Cofins a Recolher (projeção)',proj.pcRec,ant.pcRec,true)+
     _resumoHeadCard('#4fc3f7','Carga Fiscal Total (projeção)',cargaCur,cargaAnt,true)
   );
@@ -2234,7 +2239,9 @@ function renderResumoProjecao(){
     _resumoRow('Compras Tributadas ICMS',dC.compras_trib,dA.compras_trib)+
     _resumoRow('Débito ICMS',dC.total_deb_icms,dA.total_deb_icms,true)+
     _resumoRow('Crédito ICMS',dC.total_cred_icms,dA.total_cred_icms)+
-    _resumoRow('ICMS a Recolher',proj.icmsRec,ant.icmsRec,true)
+    _resumoRow('ICMS a Recolher (sem ST)',proj.icmsSemST,ant.icmsSemST,true)+
+    _resumoRow('ICMS-ST (Produção)',proj.icmsST,ant.icmsST,true)+
+    _resumoRow('ICMS + ICMS-ST a Recolher',proj.icmsRec,ant.icmsRec,true)
   );
   setH('projecao-icms-insight',_insightICMSProjecao(dC,dA,proj.icmsRec,ant.icmsRec));
 
