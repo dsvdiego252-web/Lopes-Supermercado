@@ -1166,6 +1166,18 @@ tfoot td{
         </div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-simplesmei"></table></div></div>
       </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd">
+          <div class="apr-section-title">ICMS a Recolher</div>
+          <div class="apr-section-sub">ICMS a recolher e ICMS-ST, separados · percentual sobre o faturamento</div>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS a Recolher</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-recolher"></canvas></div></div>
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ab47bc"></div>ICMS-ST</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-st"></canvas></div></div>
+        </div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-recolher"></table></div></div>
+      </div>
     </div>
 
     <div id="apr-pis-content" style="display:none">
@@ -2066,6 +2078,20 @@ function _calcICMSRecolherLopes(){
   return {valor:Math.max(0,total),saldo:total,prodTemSaldo,prodSaldo,prodST,saldoLojas,icmsST,icmsSemST};
 }
 function _calcPISCOFINSRecolher(){const d=getDados();return Math.max(0,R(d.total_deb_pis)-R(d.total_cred_pis));}
+function _serieICMSRecolherST(){
+  // Roda o mesmo cálculo oficial (_calcICMSRecolherLopes) mês a mês, mantendo o filtro de empresa.
+  const selEl=document.getElementById('sel-periodo');
+  const prev=selEl.value;
+  const semST=[],st=[];
+  PERIODOS.forEach(p=>{
+    selEl.value=p;
+    const r=_calcICMSRecolherLopes();
+    semST.push(r.icmsSemST);
+    st.push(r.icmsST);
+  });
+  selEl.value=prev;
+  return {semST,st};
+}
 
 // ── RESUMO IMPOSTOS (comparativo mês atual x mês anterior) ─────────────────────
 function _periodosResumo(){
@@ -2528,6 +2554,18 @@ function _groupedBarChart(id,seriesDefs){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
+function _serieBarChart(id,data,cor){
+  DC(id);
+  const canvas=document.getElementById(id);
+  if(!canvas||typeof Chart==='undefined')return;
+  _CH[id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels:LABELS,datasets:[{data,backgroundColor:hexToRgba(cor,.75),borderRadius:4,maxBarThickness:34}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
+  });
+}
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
 }
@@ -2622,6 +2660,15 @@ function renderApresentacao(){
     {label:'Compras MEI *',data:smMei},
     {label:'ICMS Não Creditado (MEI) *',data:smNcMei},
   ],'TOTAL ICMS NÃO CREDITADO',smTotal);
+
+  const serRec=_serieICMSRecolherST();
+  const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
+  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350');
+  _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
+  _aprTabelaComTotal('apr-tb-icms-recolher',[
+    {label:'ICMS a Recolher',data:serRec.semST,pctBase:svBruta,pctSuffix:'do fat.'},
+    {label:'ICMS-ST',data:serRec.st,pctBase:svBruta,pctSuffix:'do fat.'},
+  ],'ICMS + ICMS-ST A RECOLHER',icmsRecTotal,svBruta,'do fat.');
 
   _aprGrupo('apr-mini-icms-deb','apr-tb-icms-deb',APR_ICMS_DEB,'total_deb_icms');
   _aprGrupo('apr-mini-icms-cred','apr-tb-icms-cred',APR_ICMS_CRED,'total_cred_icms');
