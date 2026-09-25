@@ -561,6 +561,18 @@ tfoot td{
 .apr-mini-sub{font-size:9px;color:var(--muted);font-family:var(--fm);margin-bottom:5px}
 .apr-mini-chart-wrap{width:100%;height:46px;position:relative}
 .apr-note{font-size:10px;color:var(--muted);font-family:var(--fm);line-height:1.4;margin:-4px 0 12px}
+.apr-just-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid #ef5350;
+  border-radius:var(--rad);padding:14px 16px;margin-top:10px}
+.apr-just-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.apr-just-mes{font-family:var(--fc);font-size:14px;font-weight:800;color:var(--text)}
+.apr-just-val{font-family:var(--fm);font-size:11.5px;color:var(--muted)}
+.apr-just-close{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:14px;line-height:1;padding:2px 4px}
+.apr-just-close:hover{color:var(--text)}
+.apr-just-body{font-family:var(--fm);font-size:11.5px;color:var(--text);line-height:1.65}
+.apr-just-body p{margin:0 0 8px}
+.apr-just-body p:last-child{margin-bottom:0}
+.apr-just-obs{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);color:var(--muted);font-style:italic}
 @media(max-width:680px){
   .apr-mini-grid{grid-template-columns:repeat(2,1fr)}
 }
@@ -1173,9 +1185,10 @@ tfoot td{
           <div class="apr-section-sub">ICMS a recolher e ICMS-ST, separados · percentual sobre o faturamento</div>
         </div>
         <div class="charts-row">
-          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS a Recolher <span class="apr-pct" style="font-weight:400">— passe o mouse no mês para ver a justificativa</span></div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-recolher"></canvas></div></div>
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS a Recolher <span class="apr-pct" style="font-weight:400">— clique no mês para ver a justificativa</span></div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-recolher"></canvas></div></div>
           <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ab47bc"></div>ICMS-ST</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-st"></canvas></div></div>
         </div>
+        <div id="apr-just-icms" class="apr-just-card" style="display:none"></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-recolher"></table></div></div>
       </div>
     </div>
@@ -2555,7 +2568,7 @@ function _groupedBarChart(id,seriesDefs){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
-function _serieBarChart(id,data,cor,afterBodyFn){
+function _serieBarChart(id,data,cor,onBarClick){
   DC(id);
   const canvas=document.getElementById(id);
   if(!canvas||typeof Chart==='undefined')return;
@@ -2563,21 +2576,11 @@ function _serieBarChart(id,data,cor,afterBodyFn){
     type:'bar',
     data:{labels:LABELS,datasets:[{data,backgroundColor:hexToRgba(cor,.75),borderRadius:4,maxBarThickness:34}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{...TTP,
-        callbacks:{...TTP.callbacks,...(afterBodyFn?{afterBody:items=>afterBodyFn(items[0].dataIndex)}:{})}}},
+      onClick:onBarClick?(evt,els)=>{if(els.length)onBarClick(els[0].index);}:undefined,
+      onHover:onBarClick?(evt,els)=>{if(evt.native&&evt.native.target)evt.native.target.style.cursor=els.length?'pointer':'default';}:undefined,
+      plugins:{legend:{display:false},tooltip:{...TTP}},
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
-}
-// Quebra um texto em várias linhas curtas p/ caber no tooltip do Chart.js (que não faz wrap sozinho).
-function _wrapText(text,width){
-  const words=text.split(' ');
-  const lines=[];let cur='';
-  words.forEach(w=>{
-    if((cur+' '+w).trim().length>width){lines.push(cur.trim());cur=w;}
-    else cur=(cur+' '+w).trim();
-  });
-  if(cur)lines.push(cur.trim());
-  return lines;
 }
 // Justificativa automática do ICMS a Recolher do mês, comparado ao mês anterior.
 function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
@@ -2611,16 +2614,24 @@ function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
   }
   return l;
 }
-function _tooltipJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
+// Preenche o card de justificativa (abaixo do gráfico) ao clicar em um mês.
+function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
+  const painel=document.getElementById('apr-just-icms');
+  if(!painel)return;
   const frases=_justificativaICMS(i,svBruta,svTrib,cBruta,cTrib);
-  const linhas=['','Por que esse valor? ⓘ'];
-  frases.forEach(f=>{linhas.push(..._wrapText(f,54));});
-  const obs=OCORRENCIAS[PERIODOS[i]]?.icms;
-  if(obs){
-    linhas.push('','📝 Observação:');
-    linhas.push(..._wrapText(obs,54));
-  }
-  return linhas;
+  const per=PERIODOS[i];
+  const obs=OCORRENCIAS[per]?.icms;
+  let html=`<div class="apr-just-hd">
+      <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — por que esse valor?</div>
+      <div class="apr-just-val">ICMS a Recolher: ${BRL(valorMes)}</div>
+      <button class="apr-just-close" onclick="document.getElementById('apr-just-icms').style.display='none'">✕</button>
+    </div>
+    <div class="apr-just-body">`
+    + frases.map(f=>`<p>${f}</p>`).join('');
+  if(obs) html+=`<p class="apr-just-obs">📝 <b>Observação:</b> ${obs}</p>`;
+  html+='</div>';
+  painel.innerHTML=html;
+  painel.style.display='';
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2719,7 +2730,9 @@ function renderApresentacao(){
 
   const serRec=_serieICMSRecolherST();
   const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
-  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_tooltipJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib));
+  const painelJust=document.getElementById('apr-just-icms');
+  if(painelJust){painelJust.style.display='none';painelJust.innerHTML='';}
+  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,serRec.semST[i]));
   _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
   _aprTabelaComTotal('apr-tb-icms-recolher',[
     {label:'ICMS a Recolher',data:serRec.semST,pctBase:svBruta,pctSuffix:'do fat.'},
