@@ -547,9 +547,11 @@ tfoot td{
 .apr-tab-btn:hover{color:var(--text);border-color:var(--border2)}
 .apr-tab-btn.active{color:#0a0d12;background:var(--accent);border-color:var(--accent)}
 .apr-section{margin-bottom:26px}
-.apr-section-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.apr-section-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap}
 .apr-section-title{font-family:var(--fc);font-size:15px;font-weight:800;letter-spacing:.02em;color:var(--text)}
 .apr-section-sub{font-family:var(--fm);font-size:10.5px;color:var(--muted)}
+.apr-toggle-btn{margin-left:auto;white-space:nowrap}
+.apr-pct{color:var(--muted);font-size:9.5px}
 .apr-mini-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin-bottom:12px}
 .apr-mini-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--mc,var(--accent));
   border-radius:10px;padding:10px 12px 8px}
@@ -1127,16 +1129,33 @@ tfoot td{
 
     <div id="apr-icms-content">
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Faturamento</div><div class="apr-section-sub">barra = faturamento bruto · linhas = vendas tributadas, ST e isentas</div></div>
+        <div class="apr-section-hd">
+          <div class="apr-section-title">Faturamento</div>
+          <div class="apr-section-sub">barra = faturamento bruto · linhas = vendas tributadas, ST, isentas e devolução</div>
+          <button class="act-btn apr-toggle-btn" data-nome="Débitos" onclick="aprToggle(this,'apr-detalhe-icms-deb')">🔍 Verificar Débitos</button>
+        </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-vendas"></canvas></div></div>
-        <div class="apr-mini-grid" id="apr-mini-icms-devolucao" style="margin-top:10px"></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-vendas"></table></div></div>
+        <div id="apr-detalhe-icms-deb" style="display:none;margin-top:14px">
+          <div class="apr-section-sub" style="margin-bottom:8px">Débitos de ICMS — todos os componentes, separados</div>
+          <div class="apr-mini-grid" id="apr-mini-icms-deb"></div>
+          <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-deb"></table></div></div>
+        </div>
       </div>
 
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Compras</div><div class="apr-section-sub">barra = compras bruto · linhas = compras tributadas, ST e isentas</div></div>
+        <div class="apr-section-hd">
+          <div class="apr-section-title">Compras</div>
+          <div class="apr-section-sub">barra = compras bruto · linhas = compras tributadas, ST e isentas</div>
+          <button class="act-btn apr-toggle-btn" data-nome="Créditos" onclick="aprToggle(this,'apr-detalhe-icms-cred')">🔍 Verificar Créditos</button>
+        </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-compras"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-compras"></table></div></div>
+        <div id="apr-detalhe-icms-cred" style="display:none;margin-top:14px">
+          <div class="apr-section-sub" style="margin-bottom:8px">Créditos de ICMS — todos os componentes, separados</div>
+          <div class="apr-mini-grid" id="apr-mini-icms-cred"></div>
+          <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-cred"></table></div></div>
+        </div>
       </div>
 
       <div class="apr-section">
@@ -1147,44 +1166,38 @@ tfoot td{
         </div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-simplesmei"></table></div></div>
       </div>
-
-      <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Débitos de ICMS</div><div class="apr-section-sub">todos os componentes, separados</div></div>
-        <div class="apr-mini-grid" id="apr-mini-icms-deb"></div>
-        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-deb"></table></div></div>
-      </div>
-
-      <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Créditos de ICMS</div><div class="apr-section-sub">todos os componentes, separados</div></div>
-        <div class="apr-mini-grid" id="apr-mini-icms-cred"></div>
-        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-cred"></table></div></div>
-      </div>
     </div>
 
     <div id="apr-pis-content" style="display:none">
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Vendas — Base PIS/Cofins</div><div class="apr-section-sub">barra = faturamento bruto · linhas = tributadas e alíquota zero</div></div>
+        <div class="apr-section-hd">
+          <div class="apr-section-title">Vendas — Base PIS/Cofins</div>
+          <div class="apr-section-sub">barra = faturamento bruto · linhas = tributadas e alíquota zero</div>
+          <button class="act-btn apr-toggle-btn" data-nome="Débitos" onclick="aprToggle(this,'apr-detalhe-pis-deb')">🔍 Verificar Débitos</button>
+        </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-vendas"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-vendas"></table></div></div>
+        <div id="apr-detalhe-pis-deb" style="display:none;margin-top:14px">
+          <div class="apr-section-sub" style="margin-bottom:8px">Débitos de PIS/Cofins — todos os componentes, separados</div>
+          <div class="apr-mini-grid" id="apr-mini-pis-deb"></div>
+          <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-deb"></table></div></div>
+        </div>
       </div>
 
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Compras — Base PIS/Cofins</div><div class="apr-section-sub">barra = compras bruto · linhas = tributadas e alíquota zero</div></div>
+        <div class="apr-section-hd">
+          <div class="apr-section-title">Compras — Base PIS/Cofins</div>
+          <div class="apr-section-sub">barra = compras bruto · linhas = tributadas e alíquota zero</div>
+          <button class="act-btn apr-toggle-btn" data-nome="Créditos" onclick="aprToggle(this,'apr-detalhe-pis-cred')">🔍 Verificar Créditos</button>
+        </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-compras"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-compras"></table></div></div>
-      </div>
-
-      <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Débitos de PIS/Cofins</div><div class="apr-section-sub">todos os componentes, separados</div></div>
-        <div class="apr-mini-grid" id="apr-mini-pis-deb"></div>
-        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-deb"></table></div></div>
-      </div>
-
-      <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Créditos de PIS/Cofins</div><div class="apr-section-sub">todos os componentes, separados</div></div>
-        <div class="apr-mini-grid" id="apr-mini-pis-cred"></div>
-        <div class="apr-note">* Crédito Não Aproveitado não entra na soma do total — é crédito que a empresa não pôde usar.</div>
-        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-cred"></table></div></div>
+        <div id="apr-detalhe-pis-cred" style="display:none;margin-top:14px">
+          <div class="apr-section-sub" style="margin-bottom:8px">Créditos de PIS/Cofins — todos os componentes, separados</div>
+          <div class="apr-mini-grid" id="apr-mini-pis-cred"></div>
+          <div class="apr-note">* Crédito Não Aproveitado não entra na soma do total — é crédito que a empresa não pôde usar.</div>
+          <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-cred"></table></div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2518,11 +2531,29 @@ function _groupedBarChart(id,seriesDefs){
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
 }
-function _aprTabelaComTotal(tableId,rows,totalLabel,totalData){
+function _aprLinhaComPct(label,data,pctBase,pctSuffix,trExtra){
+  return `<tr${trExtra||''}><td>${label}</td>`+data.map((v,i)=>{
+    const pct=pctBase&&pctBase[i]>0?` <span class="apr-pct">(${(v/pctBase[i]*100).toFixed(1)}%${pctSuffix?(' '+pctSuffix):''})</span>`:'';
+    return `<td class="r">${BRL(v)}${pct}</td>`;
+  }).join('')+'</tr>';
+}
+function _aprTabelaComTotal(tableId,rows,totalLabel,totalData,totalPctBase,totalPctSuffix){
   let html=_aprMesesHeader()+'<tbody>';
-  rows.forEach(r=>{html+=`<tr><td>${r.label}</td>`+r.data.map(v=>`<td class="r">${BRL(v)}</td>`).join('')+'</tr>';});
-  html+=`<tr style="font-weight:700;background:var(--surface2)"><td>${totalLabel}</td>`+totalData.map(v=>`<td class="r">${BRL(v)}</td>`).join('')+'</tr></tbody>';
+  rows.forEach(r=>{html+=_aprLinhaComPct(r.label,r.data,r.pctBase,r.pctSuffix);});
+  html+=_aprLinhaComPct(totalLabel,totalData,totalPctBase,totalPctSuffix,' style="font-weight:700;background:var(--surface2)"');
+  html+='</tbody>';
   setH(tableId,html);
+}
+function aprToggle(btn,contentId){
+  const el=document.getElementById(contentId);
+  if(!el)return;
+  const abrindo=el.style.display==='none';
+  el.style.display=abrindo?'':'none';
+  btn.textContent=(abrindo?'▲ Ocultar ':'🔍 Verificar ')+(btn.dataset.nome||'');
+  if(abrindo){
+    // Chart.js não redimensiona sozinho um canvas que estava oculto ao ser criado.
+    el.querySelectorAll('canvas').forEach(c=>{const ch=_CH[c.id];if(ch)ch.resize();});
+  }
 }
 function _aprGrupo(gridId,tbodyTableId,campos,totalCampo){
   const container=document.getElementById(gridId);
@@ -2566,26 +2597,19 @@ function renderApresentacao(){
   const svTrib=getSerie('venda_trib'),svST=getSerie('venda_st'),svIsen=getSerie('venda_isenta'),svDev=getSerie('dev_venda'),svBruta=getSerie('venda_bruta');
   _totalComLinhasChart('apr-ch-icms-vendas',svBruta,'Faturamento Bruto',[
     {label:'Tributada',data:svTrib,cor:'#4fc3f7'},{label:'ST',data:svST,cor:'#ab47bc'},{label:'Isenta',data:svIsen,cor:'#66bb6a'},
+    {label:'Devolução',data:svDev,cor:'#ef5350'},
   ]);
   _aprTabelaComTotal('apr-tb-icms-vendas',[
-    {label:'Vendas Tributadas',data:svTrib},{label:'Vendas ST',data:svST},{label:'Vendas Isentas',data:svIsen},
+    {label:'Vendas Tributadas',data:svTrib,pctBase:svBruta},{label:'Vendas ST',data:svST,pctBase:svBruta},{label:'Vendas Isentas',data:svIsen,pctBase:svBruta},
   ],'FATURAMENTO BRUTO',svBruta);
-  setH('apr-mini-icms-devolucao',
-    `<div class="apr-mini-card" style="--mc:#ef5350">
-      <div class="apr-mini-lbl">Devolução de Venda</div>
-      <div class="apr-mini-val">${BRL(svDev.reduce((a,b)=>a+b,0))}</div>
-      <div class="apr-mini-sub">total no período</div>
-      <div class="apr-mini-chart-wrap"><canvas id="apr-mc-devolucao"></canvas></div>
-    </div>`);
-  _miniBarChart('apr-mc-devolucao',svDev,'#ef5350');
 
   const cTrib=getSerie('compras_trib'),cST=getSerie('compras_st'),cIsen=getSerie('compras_isentas'),cBruta=getSerie('compras_bruto');
   _totalComLinhasChart('apr-ch-icms-compras',cBruta,'Compras Bruto',[
     {label:'Tributada',data:cTrib,cor:'#4fc3f7'},{label:'ST',data:cST,cor:'#ab47bc'},{label:'Isenta',data:cIsen,cor:'#66bb6a'},
   ]);
   _aprTabelaComTotal('apr-tb-icms-compras',[
-    {label:'Compras Tributadas',data:cTrib},{label:'Compras ST',data:cST},{label:'Compras Isentas',data:cIsen},
-  ],'COMPRAS BRUTO',cBruta);
+    {label:'Compras Tributadas',data:cTrib,pctBase:cBruta},{label:'Compras ST',data:cST,pctBase:cBruta},{label:'Compras Isentas',data:cIsen,pctBase:cBruta},
+  ],'COMPRAS BRUTO',cBruta,svBruta,'do fat.');
 
   const smSimples=getSerieSM('compras_simples'),smMei=getSerieSM('compras_mei');
   const smNcSimples=getSerieSM('icms_nao_cred_simples'),smNcMei=getSerieSM('icms_nao_cred_mei');
@@ -2606,14 +2630,14 @@ function renderApresentacao(){
   const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
   _totalComLinhasChart('apr-ch-pis-vendas',svBruta,'Faturamento Bruto',[{label:'Tributada',data:pvTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pvZero,cor:'#66bb6a'}]);
   _aprTabelaComTotal('apr-tb-pis-vendas',[
-    {label:'Vendas Tributadas PIS/Cofins',data:pvTrib},{label:'Vendas Alíquota Zero',data:pvZero},
+    {label:'Vendas Tributadas PIS/Cofins',data:pvTrib,pctBase:svBruta},{label:'Vendas Alíquota Zero',data:pvZero,pctBase:svBruta},
   ],'FATURAMENTO BRUTO',svBruta);
 
   const pcTrib=getSerie('compras_trib_pis'),pcZero=getSerie('compras_aliq_zero');
   _totalComLinhasChart('apr-ch-pis-compras',cBruta,'Compras Bruto',[{label:'Tributada',data:pcTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pcZero,cor:'#66bb6a'}]);
   _aprTabelaComTotal('apr-tb-pis-compras',[
-    {label:'Compras Tributadas PIS/Cofins',data:pcTrib},{label:'Compras Alíquota Zero',data:pcZero},
-  ],'COMPRAS BRUTO',cBruta);
+    {label:'Compras Tributadas PIS/Cofins',data:pcTrib,pctBase:cBruta},{label:'Compras Alíquota Zero',data:pcZero,pctBase:cBruta},
+  ],'COMPRAS BRUTO',cBruta,svBruta,'do fat.');
 
   _aprGrupo('apr-mini-pis-deb','apr-tb-pis-deb',APR_PIS_DEB,'total_deb_pis');
   const rowsPisCred=_aprGrupo('apr-mini-pis-cred',null,APR_PIS_CRED,'total_cred_pis');
