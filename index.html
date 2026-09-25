@@ -579,7 +579,7 @@ tfoot td{
       <option value="all">Todos</option>
     </select>
     <div class="hbadge"><span class="hdot"></span><span id="hdr-badge">Carregando...</span></div>
-    <div class="hbadge" id="upd-badge">Atualizado: 25/09/2026 09:29</div>
+    <div class="hbadge" id="upd-badge">Atualizado: 25/09/2026 09:31</div>
     <button class="hbtn" id="fs-btn" onclick="toggleFullScreenSafe()" title="Tela cheia">⛶ Tela cheia</button>
   </div>
 </div>
@@ -1087,9 +1087,7 @@ const DADOS={"LOJA 01":{"2026-01":{"venda_bruta":2139441.39,"venda_liq":2129393.
 const LOJAS=["LOJA 01", "LOJA 02", "LOJA 03", "LOJA 04", "LOJA 05", "PRODUCAO"];
 const PERIODOS=["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"];
 const LABELS=["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"];
-// Compras de fornecedores Simples Nacional/MEI e o ICMS embutido no preço que não pode
-// ser creditado. Consolidado (sem quebra por loja) porque a origem não informa a empresa.
-const SIMPLES_MEI={};
+const SIMPLES_MEI={"2026-01":{"compras_simples":83996.0,"icms_nao_cred_simples":4493.46,"compras_mei":3118.0,"icms_nao_cred_mei":374.16},"2026-02":{"compras_simples":81876.92,"icms_nao_cred_simples":4758.54,"compras_mei":5100.0,"icms_nao_cred_mei":306.0},"2026-03":{"compras_simples":141352.8,"icms_nao_cred_simples":8450.48,"compras_mei":5845.5,"icms_nao_cred_mei":856.11},"2026-04":{"compras_simples":115858.73,"icms_nao_cred_simples":7055.06,"compras_mei":3232.0,"icms_nao_cred_mei":387.84},"2026-05":{"compras_simples":86404.78,"icms_nao_cred_simples":5199.19,"compras_mei":4151.0,"icms_nao_cred_mei":650.22},"2026-06":{"compras_simples":62268.25,"icms_nao_cred_simples":2939.97,"compras_mei":7485.0,"icms_nao_cred_mei":1094.1},"2026-07":{"compras_simples":93010.97,"icms_nao_cred_simples":6120.29,"compras_mei":4236.0,"icms_nao_cred_mei":508.32},"2026-08":{"compras_simples":62568.25,"icms_nao_cred_simples":3327.83,"compras_mei":4751.5,"icms_nao_cred_mei":703.23},"2026-09":{"compras_simples":0.0,"icms_nao_cred_simples":0.0,"compras_mei":0.0,"icms_nao_cred_mei":0.0}};
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const R=v=>typeof v==='number'?v:0;
 const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
