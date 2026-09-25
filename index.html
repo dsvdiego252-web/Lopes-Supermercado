@@ -539,6 +539,30 @@ tfoot td{
   .projecao-tag{margin-left:0}
 }
 
+/* V9 - ABA IMPOSTOS · APRESENTAÇÃO (evolução mensal completa) */
+.apr-tab-bar{display:flex;gap:6px;margin-bottom:18px}
+.apr-tab-btn{padding:9px 20px;font-size:12px;font-weight:700;font-family:var(--fc);letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);transition:all .15s}
+.apr-tab-btn:hover{color:var(--text);border-color:var(--border2)}
+.apr-tab-btn.active{color:#0a0d12;background:var(--accent);border-color:var(--accent)}
+.apr-section{margin-bottom:26px}
+.apr-section-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.apr-section-title{font-family:var(--fc);font-size:15px;font-weight:800;letter-spacing:.02em;color:var(--text)}
+.apr-section-sub{font-family:var(--fm);font-size:10.5px;color:var(--muted)}
+.apr-mini-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin-bottom:12px}
+.apr-mini-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--mc,var(--accent));
+  border-radius:10px;padding:10px 12px 8px}
+.apr-mini-lbl{font-size:10px;color:var(--muted);font-family:var(--fm);letter-spacing:.02em;margin-bottom:4px;
+  min-height:24px;line-height:1.25}
+.apr-mini-val{font-size:13px;font-weight:700;font-family:var(--fm);color:var(--text);margin-bottom:2px}
+.apr-mini-sub{font-size:9px;color:var(--muted);font-family:var(--fm);margin-bottom:5px}
+.apr-mini-chart-wrap{width:100%;height:46px;position:relative}
+.apr-note{font-size:10px;color:var(--muted);font-family:var(--fm);line-height:1.4;margin:-4px 0 12px}
+@media(max-width:680px){
+  .apr-mini-grid{grid-template-columns:repeat(2,1fr)}
+}
+
 </style>
 <!-- V6.6: saldo acumulado ICMS usa último período, não soma meses -->
 <!-- V6.7: destaque percentual margem após impostos -->
@@ -594,6 +618,7 @@ tfoot td{
   <button class="sub-btn" data-page="piscofins" onclick="switchSub('piscofins',this)">PIS / Cofins</button>
   <button class="sub-btn" data-page="resumo" onclick="switchSub('resumo',this)">📊 Resumo</button>
   <button class="sub-btn" data-page="resumo-projecao" onclick="switchSub('resumo-projecao',this)">📈 Resumo Projeção</button>
+  <button class="sub-btn" data-page="apresentacao" onclick="switchSub('apresentacao',this)">🎤 Apresentação</button>
 </div>
 
 <!-- ══ COMERCIAL ══ -->
@@ -992,6 +1017,7 @@ tfoot td{
         <div class="resumo-sub" id="resumo-periodo-label">—</div>
       </div>
       <div class="action-bar" style="margin:0">
+        <button class="act-btn" onclick="abrirApresentacao()">🎤 Apresentação</button>
         <button class="act-btn" id="resumo-print-btn" onclick="capturarResumoImpostos()">📸 Capturar Print</button>
         <button class="act-btn" onclick="window.print()">🖨 Imprimir / PDF</button>
       </div>
@@ -1075,6 +1101,90 @@ tfoot td{
           </table>
           <div class="resumo-insight" id="projecao-pis-insight"></div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPOSTOS · APRESENTAÇÃO ══ -->
+<div class="page" id="page-apresentacao">
+  <div id="apresentacao-capture">
+    <div class="resumo-head">
+      <div>
+        <div class="resumo-title">🎤 Apresentação — Evolução Mensal</div>
+        <div class="resumo-sub" id="apr-periodo-label">—</div>
+      </div>
+      <div class="action-bar" style="margin:0">
+        <button class="act-btn" id="apr-print-btn" onclick="capturarApresentacao()">📸 Capturar Print</button>
+        <button class="act-btn" onclick="window.print()">🖨 Imprimir / PDF</button>
+      </div>
+    </div>
+
+    <div class="apr-tab-bar">
+      <button class="apr-tab-btn active" onclick="aprSwitchAba('icms',this)">🧾 ICMS</button>
+      <button class="apr-tab-btn" onclick="aprSwitchAba('piscofins',this)">🧾 PIS / Cofins</button>
+    </div>
+
+    <div id="apr-icms-content">
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Faturamento</div><div class="apr-section-sub">barra = faturamento bruto · linhas = vendas tributadas, ST e isentas</div></div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-vendas"></canvas></div></div>
+        <div class="apr-mini-grid" id="apr-mini-icms-devolucao" style="margin-top:10px"></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-vendas"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Compras</div><div class="apr-section-sub">barra = compras bruto · linhas = compras tributadas, ST e isentas</div></div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-compras"></canvas></div></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-compras"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Compras Simples Nacional &amp; MEI</div><div class="apr-section-sub">consolidado do grupo, sem quebra por loja</div></div>
+        <div class="charts-row">
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#f5a623"></div>Compras</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-simplesmei"></canvas></div></div>
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS Não Creditado</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-naocred"></canvas></div></div>
+        </div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-simplesmei"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Débitos de ICMS</div><div class="apr-section-sub">todos os componentes, separados</div></div>
+        <div class="apr-mini-grid" id="apr-mini-icms-deb"></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-deb"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Créditos de ICMS</div><div class="apr-section-sub">todos os componentes, separados</div></div>
+        <div class="apr-mini-grid" id="apr-mini-icms-cred"></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-cred"></table></div></div>
+      </div>
+    </div>
+
+    <div id="apr-pis-content" style="display:none">
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Vendas — Base PIS/Cofins</div><div class="apr-section-sub">barra = faturamento bruto · linhas = tributadas e alíquota zero</div></div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-vendas"></canvas></div></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-vendas"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Compras — Base PIS/Cofins</div><div class="apr-section-sub">barra = compras bruto · linhas = tributadas e alíquota zero</div></div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-compras"></canvas></div></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-compras"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Débitos de PIS/Cofins</div><div class="apr-section-sub">todos os componentes, separados</div></div>
+        <div class="apr-mini-grid" id="apr-mini-pis-deb"></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-deb"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd"><div class="apr-section-title">Créditos de PIS/Cofins</div><div class="apr-section-sub">todos os componentes, separados</div></div>
+        <div class="apr-mini-grid" id="apr-mini-pis-cred"></div>
+        <div class="apr-note">* Crédito Não Aproveitado não entra na soma do total — é crédito que a empresa não pôde usar.</div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-cred"></table></div></div>
       </div>
     </div>
   </div>
@@ -1454,6 +1564,7 @@ function renderAtivePage(){
   else if(id==='page-piscofins') renderPIS();
   else if(id==='page-resumo') renderResumo();
   else if(id==='page-resumo-projecao') renderResumoProjecao();
+  else if(id==='page-apresentacao') renderApresentacao();
 }
 function initPeriodos(){
   const sel=document.getElementById('sel-periodo');
@@ -2302,6 +2413,228 @@ function renderResumoProjecao(){
   );
   setH('projecao-pis-insight',_insightPISProjecao(dC,dA,proj.pcRec,ant.pcRec));
 }
+
+// ── APRESENTAÇÃO (evolução mensal completa — todos os meses, ICMS / PIS-Cofins) ─
+// Cores por categoria mantidas fixas (mesma categoria = mesma cor sempre), reaproveitando
+// quando possível a paleta já usada nos donuts de composição do ICMS/PIS-Cofins.
+const APR_ICMS_DEB=[
+  {campo:'deb_icms_vendas',  label:'Débito s/ Vendas',       cor:'#ef5350'},
+  {campo:'deb_icms_transf',  label:'Transferências',         cor:'#f5a623'},
+  {campo:'deb_icms_dev',     label:'Devolução de Compra',    cor:'#ab47bc'},
+  {campo:'deb_icms_bonif',   label:'Bonificação',            cor:'#ff8a65'},
+  {campo:'deb_icms_outras',  label:'Outras Saídas',          cor:'#78909c'},
+  {campo:'deb_icms_perdas',  label:'Perdas',                 cor:'#8d6e63'},
+  {campo:'deb_icms_trocas',  label:'Trocas',                 cor:'#ffca28'},
+  {campo:'deb_icms_difal',   label:'DIFAL',                  cor:'#26c6da'},
+  {campo:'deb_icms_ajuste',  label:'Ajuste de Apuração',     cor:'#4fc3f7'},
+];
+const APR_ICMS_CRED=[
+  {campo:'cred_icms_compras',label:'Compras',                cor:'#66bb6a'},
+  {campo:'cred_icms_energia',label:'Energia',                cor:'#26c6da'},
+  {campo:'cred_icms_comb',   label:'Combustível',            cor:'#f5a623'},
+  {campo:'cred_icms_glp',    label:'GLP',                    cor:'#ab47bc'},
+  {campo:'cred_icms_excst',  label:'Excl. ST',               cor:'#7e57c2'},
+  {campo:'cred_icms_transf', label:'Transferências',         cor:'#4fc3f7'},
+  {campo:'cred_icms_dev',    label:'Devolução de Venda',     cor:'#ef5350'},
+  {campo:'cred_icms_adrem',  label:'ADREM',                  cor:'#8d6e63'},
+  {campo:'cred_icms_imob',   label:'Imobilizado',            cor:'#81c784'},
+  {campo:'cred_icms_bonif',  label:'Bonificação',            cor:'#ff8a65'},
+  {campo:'cred_icms_out',    label:'Outras Entradas',        cor:'#78909c'},
+  {campo:'cred_icms_frete',  label:'Frete',                  cor:'#ffca28'},
+  {campo:'cred_icms_etiq',   label:'Etiquetas',              cor:'#4db6ac'},
+];
+const APR_PIS_DEB=[
+  {campo:'deb_pis',          label:'Débito s/ Vendas',       cor:'#ef5350'},
+  {campo:'deb_pis_dev',      label:'Devolução de Compra',    cor:'#ab47bc'},
+  {campo:'deb_pis_outras',   label:'Outras Saídas',          cor:'#78909c'},
+  {campo:'deb_pis_lc',       label:'LC 224/2025',            cor:'#ffca28'},
+];
+const APR_PIS_CRED=[
+  {campo:'cred_pis_compra',  label:'Compras',                cor:'#66bb6a'},
+  {campo:'cred_pis_aluguel', label:'Aluguel',                cor:'#f5a623'},
+  {campo:'cred_pis_energia', label:'Energia',                cor:'#4fc3f7'},
+  {campo:'cred_pis_comb',    label:'Combustível',            cor:'#ab47bc'},
+  {campo:'cred_pis_frete',   label:'Frete',                  cor:'#26c6da'},
+  {campo:'cred_pis_dev',     label:'Devolução de Venda',     cor:'#ff8a65'},
+  {campo:'cred_pis_etiq',    label:'Etiquetas',              cor:'#4db6ac'},
+];
+
+function getSerieSM(campo){ return PERIODOS.map(p=>R(SIMPLES_MEI[p]?.[campo])); }
+
+function _miniBarChart(id,data,color){
+  DC(id);
+  const canvas=document.getElementById(id);
+  if(!canvas||typeof Chart==='undefined')return;
+  _CH[id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels:LABELS,datasets:[{data,backgroundColor:color,borderRadius:2,maxBarThickness:14}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#141a24',borderColor:'#243050',borderWidth:1,titleColor:'#f5a623',bodyColor:'#e4e8f2',
+          titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:10},
+          callbacks:{title:items=>LABELS[items[0].dataIndex]+'/'+PERIODOS[items[0].dataIndex].split('-')[0],
+            label:item=>' '+BRL(item.raw)}}},
+      scales:{x:{display:false},y:{display:false}}}
+  });
+}
+function _totalComLinhasChart(id,totalData,totalLabel,linhas){
+  // Barra = total (fundo neutro) + uma linha por categoria (mesma escala, sem eixo duplo).
+  // Linhas deixam mais fácil comparar a tendência de cada categoria mês a mês do que uma
+  // barra empilhada, onde o segmento do meio "flutua" conforme os segmentos abaixo mudam.
+  DC(id);
+  const canvas=document.getElementById(id);
+  if(!canvas||typeof Chart==='undefined')return;
+  const datasets=[
+    {type:'bar',label:totalLabel,data:totalData,backgroundColor:'rgba(86,96,124,.32)',
+      borderColor:'rgba(86,96,124,.55)',borderWidth:1,borderRadius:3,maxBarThickness:40,order:2},
+    ...linhas.map(l=>({type:'line',label:l.label,data:l.data,borderColor:l.cor,backgroundColor:l.cor,
+      borderWidth:2,pointRadius:3,pointBackgroundColor:l.cor,pointBorderColor:'#0f1319',pointBorderWidth:1,
+      tension:.3,fill:false,order:1})),
+  ];
+  _CH[id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels:LABELS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:10},boxWidth:9,padding:8}},
+        tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
+  });
+}
+function _groupedBarChart(id,seriesDefs){
+  DC(id);
+  const canvas=document.getElementById(id);
+  if(!canvas||typeof Chart==='undefined')return;
+  _CH[id]=new Chart(canvas,{
+    type:'bar',
+    data:{labels:LABELS,datasets:seriesDefs.map(s=>({label:s.label,data:s.data,backgroundColor:s.cor,borderRadius:4,maxBarThickness:18}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:10},boxWidth:9,padding:8}},
+        tooltip:{...TTP}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
+  });
+}
+function _aprMesesHeader(){
+  return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
+}
+function _aprTabelaComTotal(tableId,rows,totalLabel,totalData){
+  let html=_aprMesesHeader()+'<tbody>';
+  rows.forEach(r=>{html+=`<tr><td>${r.label}</td>`+r.data.map(v=>`<td class="r">${BRL(v)}</td>`).join('')+'</tr>';});
+  html+=`<tr style="font-weight:700;background:var(--surface2)"><td>${totalLabel}</td>`+totalData.map(v=>`<td class="r">${BRL(v)}</td>`).join('')+'</tr></tbody>';
+  setH(tableId,html);
+}
+function _aprGrupo(gridId,tbodyTableId,campos,totalCampo){
+  const container=document.getElementById(gridId);
+  const rows=campos.map(c=>({label:c.label,cor:c.cor,data:getSerie(c.campo)}));
+  if(container){
+    container.innerHTML=rows.map((r,i)=>{
+      const total=r.data.reduce((a,b)=>a+b,0);
+      return `<div class="apr-mini-card" style="--mc:${r.cor}">
+        <div class="apr-mini-lbl">${r.label}</div>
+        <div class="apr-mini-val">${BRL(total)}</div>
+        <div class="apr-mini-sub">total no período</div>
+        <div class="apr-mini-chart-wrap"><canvas id="${gridId}-mc-${i}"></canvas></div>
+      </div>`;
+    }).join('');
+    rows.forEach((r,i)=>_miniBarChart(`${gridId}-mc-${i}`,r.data,r.cor));
+  }
+  if(tbodyTableId)_aprTabelaComTotal(tbodyTableId,rows,'TOTAL',getSerie(totalCampo));
+  return rows;
+}
+function aprSwitchAba(aba,btn){
+  document.querySelectorAll('.apr-tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const icmsEl=document.getElementById('apr-icms-content'),pisEl=document.getElementById('apr-pis-content');
+  if(icmsEl)icmsEl.style.display=aba==='icms'?'':'none';
+  if(pisEl)pisEl.style.display=aba==='piscofins'?'':'none';
+}
+function abrirApresentacao(){
+  const btn=document.querySelector('#sub-impostos [data-page="apresentacao"]');
+  if(btn)switchSub('apresentacao',btn);
+}
+function renderApresentacao(){
+  const n=PERIODOS.length;
+  if(n<1){set('apr-periodo-label','—');return;}
+  const primeiroLbl=LABELS[0]+'/'+PERIODOS[0].split('-')[0];
+  const ultimoLbl=LABELS[n-1]+'/'+PERIODOS[n-1].split('-')[0];
+  const nEmp=_selectedEmps.size;
+  const empLabel=nEmp===LOJAS.length?'Todas as empresas':(nEmp===1?[..._selectedEmps][0]:nEmp+' empresas selecionadas');
+  set('apr-periodo-label', primeiroLbl+' — '+ultimoLbl+' ('+n+' meses) · '+empLabel);
+
+  // ── ICMS ──
+  const svTrib=getSerie('venda_trib'),svST=getSerie('venda_st'),svIsen=getSerie('venda_isenta'),svDev=getSerie('dev_venda'),svBruta=getSerie('venda_bruta');
+  _totalComLinhasChart('apr-ch-icms-vendas',svBruta,'Faturamento Bruto',[
+    {label:'Tributada',data:svTrib,cor:'#4fc3f7'},{label:'ST',data:svST,cor:'#ab47bc'},{label:'Isenta',data:svIsen,cor:'#66bb6a'},
+  ]);
+  _aprTabelaComTotal('apr-tb-icms-vendas',[
+    {label:'Vendas Tributadas',data:svTrib},{label:'Vendas ST',data:svST},{label:'Vendas Isentas',data:svIsen},
+  ],'FATURAMENTO BRUTO',svBruta);
+  setH('apr-mini-icms-devolucao',
+    `<div class="apr-mini-card" style="--mc:#ef5350">
+      <div class="apr-mini-lbl">Devolução de Venda</div>
+      <div class="apr-mini-val">${BRL(svDev.reduce((a,b)=>a+b,0))}</div>
+      <div class="apr-mini-sub">total no período</div>
+      <div class="apr-mini-chart-wrap"><canvas id="apr-mc-devolucao"></canvas></div>
+    </div>`);
+  _miniBarChart('apr-mc-devolucao',svDev,'#ef5350');
+
+  const cTrib=getSerie('compras_trib'),cST=getSerie('compras_st'),cIsen=getSerie('compras_isentas'),cBruta=getSerie('compras_bruto');
+  _totalComLinhasChart('apr-ch-icms-compras',cBruta,'Compras Bruto',[
+    {label:'Tributada',data:cTrib,cor:'#4fc3f7'},{label:'ST',data:cST,cor:'#ab47bc'},{label:'Isenta',data:cIsen,cor:'#66bb6a'},
+  ]);
+  _aprTabelaComTotal('apr-tb-icms-compras',[
+    {label:'Compras Tributadas',data:cTrib},{label:'Compras ST',data:cST},{label:'Compras Isentas',data:cIsen},
+  ],'COMPRAS BRUTO',cBruta);
+
+  const smSimples=getSerieSM('compras_simples'),smMei=getSerieSM('compras_mei');
+  const smNcSimples=getSerieSM('icms_nao_cred_simples'),smNcMei=getSerieSM('icms_nao_cred_mei');
+  _groupedBarChart('apr-ch-icms-simplesmei',[{label:'Simples Nacional',data:smSimples,cor:'#f5a623'},{label:'MEI',data:smMei,cor:'#26c6da'}]);
+  _groupedBarChart('apr-ch-icms-naocred',[{label:'Simples Nacional',data:smNcSimples,cor:'#f5a623'},{label:'MEI',data:smNcMei,cor:'#26c6da'}]);
+  const smTotal=PERIODOS.map((_,i)=>smNcSimples[i]+smNcMei[i]);
+  _aprTabelaComTotal('apr-tb-icms-simplesmei',[
+    {label:'Compras Simples Nacional *',data:smSimples},
+    {label:'ICMS Não Creditado (Simples Nacional) *',data:smNcSimples},
+    {label:'Compras MEI *',data:smMei},
+    {label:'ICMS Não Creditado (MEI) *',data:smNcMei},
+  ],'TOTAL ICMS NÃO CREDITADO',smTotal);
+
+  _aprGrupo('apr-mini-icms-deb','apr-tb-icms-deb',APR_ICMS_DEB,'total_deb_icms');
+  _aprGrupo('apr-mini-icms-cred','apr-tb-icms-cred',APR_ICMS_CRED,'total_cred_icms');
+
+  // ── PIS/Cofins ──
+  const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
+  _totalComLinhasChart('apr-ch-pis-vendas',svBruta,'Faturamento Bruto',[{label:'Tributada',data:pvTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pvZero,cor:'#66bb6a'}]);
+  _aprTabelaComTotal('apr-tb-pis-vendas',[
+    {label:'Vendas Tributadas PIS/Cofins',data:pvTrib},{label:'Vendas Alíquota Zero',data:pvZero},
+  ],'FATURAMENTO BRUTO',svBruta);
+
+  const pcTrib=getSerie('compras_trib_pis'),pcZero=getSerie('compras_aliq_zero');
+  _totalComLinhasChart('apr-ch-pis-compras',cBruta,'Compras Bruto',[{label:'Tributada',data:pcTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pcZero,cor:'#66bb6a'}]);
+  _aprTabelaComTotal('apr-tb-pis-compras',[
+    {label:'Compras Tributadas PIS/Cofins',data:pcTrib},{label:'Compras Alíquota Zero',data:pcZero},
+  ],'COMPRAS BRUTO',cBruta);
+
+  _aprGrupo('apr-mini-pis-deb','apr-tb-pis-deb',APR_PIS_DEB,'total_deb_pis');
+  const rowsPisCred=_aprGrupo('apr-mini-pis-cred',null,APR_PIS_CRED,'total_cred_pis');
+
+  const naoAprov=getSerie('cred_pis_nao_aprov');
+  const gridPisCred=document.getElementById('apr-mini-pis-cred');
+  if(gridPisCred){
+    gridPisCred.insertAdjacentHTML('beforeend',`<div class="apr-mini-card" style="--mc:#56607c">
+      <div class="apr-mini-lbl">Crédito Não Aproveitado *</div>
+      <div class="apr-mini-val">${BRL(naoAprov.reduce((a,b)=>a+b,0))}</div>
+      <div class="apr-mini-sub">total no período</div>
+      <div class="apr-mini-chart-wrap"><canvas id="apr-mc-pis-naoaprov"></canvas></div>
+    </div>`);
+    _miniBarChart('apr-mc-pis-naoaprov',naoAprov,'#56607c');
+  }
+  _aprTabelaComTotal('apr-tb-pis-cred',
+    [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado *',data:naoAprov}],
+    'TOTAL', getSerie('total_cred_pis'));
+}
+function capturarApresentacao(){_capturarPrint('apresentacao-capture','apr-print-btn','apr-periodo-label','Apresentacao_Impostos');}
+
 function _renderFiscalGerencialComercial(){
   const d=getDados();const icms=_calcICMSRecolherLopes();const pc=_calcPISCOFINSRecolher();
   const carga=icms.valor+pc;const margemAntes=R(d.venda_liq)-R(d.compras_bruto);const margemDepois=margemAntes-carga;
