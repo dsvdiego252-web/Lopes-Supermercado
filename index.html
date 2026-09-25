@@ -488,7 +488,7 @@ tfoot td{
 .resumo-sub{font-family:var(--fm);font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
 .resumo-empty{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:22px;text-align:center;color:var(--muted);font-family:var(--fm);font-size:12px}
 
-.resumo-headline{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px}
+.resumo-headline{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:16px}
 .resumo-hcard{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--rc,var(--accent));
   border-radius:var(--rad);padding:12px 14px;position:relative;overflow:hidden}
 .resumo-hcard::after{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
@@ -515,9 +515,10 @@ tfoot td{
 .resumo-insight{margin-top:12px;padding:10px 12px;background:rgba(245,166,35,.05);
   border:1px solid rgba(245,166,35,.16);border-radius:8px;font-size:11.5px;line-height:1.55;color:var(--text)}
 .resumo-insight b{color:var(--accent)}
+.resumo-nota{margin-top:8px;font-size:10px;color:var(--muted);font-family:var(--fm);line-height:1.4}
 
 @media(max-width:1100px){
-  .resumo-headline{grid-template-columns:repeat(2,1fr)}
+  .resumo-headline{grid-template-columns:repeat(3,1fr)}
   .resumo-cols{grid-template-columns:1fr}
 }
 @media(max-width:680px){
@@ -1010,6 +1011,7 @@ tfoot td{
             <thead><tr><th></th><th class="r" id="resumo-icms-th-cur">Atual</th><th class="r" id="resumo-icms-th-ant">Anterior</th><th class="r">Var.</th></tr></thead>
             <tbody id="resumo-icms-tbody"></tbody>
           </table>
+          <div class="resumo-nota">* Compras Simples Nacional/MEI: valor consolidado do grupo — a origem dos dados não informa a loja, por isso não muda com o filtro de empresa.</div>
           <div class="resumo-insight" id="resumo-icms-insight"></div>
         </div>
 
@@ -1061,6 +1063,7 @@ tfoot td{
             <thead><tr><th></th><th class="r" id="projecao-icms-th-cur">Projeção</th><th class="r" id="projecao-icms-th-ant">Anterior</th><th class="r">Var.</th></tr></thead>
             <tbody id="projecao-icms-tbody"></tbody>
           </table>
+          <div class="resumo-nota">* Compras Simples Nacional/MEI: valor consolidado do grupo, projetado pelo mesmo fator de dias — a origem dos dados não informa a loja, por isso não muda com o filtro de empresa.</div>
           <div class="resumo-insight" id="projecao-icms-insight"></div>
         </div>
 
@@ -1084,6 +1087,9 @@ const DADOS={"LOJA 01":{"2026-01":{"venda_bruta":2139441.39,"venda_liq":2129393.
 const LOJAS=["LOJA 01", "LOJA 02", "LOJA 03", "LOJA 04", "LOJA 05", "PRODUCAO"];
 const PERIODOS=["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"];
 const LABELS=["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"];
+// Compras de fornecedores Simples Nacional/MEI e o ICMS embutido no preço que não pode
+// ser creditado. Consolidado (sem quebra por loja) porque a origem não informa a empresa.
+const SIMPLES_MEI={};
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const R=v=>typeof v==='number'?v:0;
 const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1949,6 +1955,11 @@ function _periodosResumo(){
   const lbl=i=>LABELS[i]+'/'+PERIODOS[i].split('-')[0];
   return {curP:PERIODOS[curIdx],antP:PERIODOS[antIdx],curLbl:lbl(curIdx),antLbl:lbl(antIdx)};
 }
+function _simplesMeiPeriodo(p){
+  const d=SIMPLES_MEI[p]||{};
+  return {compras_simples:R(d.compras_simples),icms_nao_cred_simples:R(d.icms_nao_cred_simples),
+    compras_mei:R(d.compras_mei),icms_nao_cred_mei:R(d.icms_nao_cred_mei)};
+}
 function _snapshotPeriodo(p){
   const selEl=document.getElementById('sel-periodo');
   const prev=selEl.value;
@@ -1957,7 +1968,7 @@ function _snapshotPeriodo(p){
   const icms=_calcICMSRecolherLopes();
   const pcRec=_calcPISCOFINSRecolher();
   selEl.value=prev;
-  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec};
+  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec,sm:_simplesMeiPeriodo(p)};
 }
 function _rvar(curVal,antVal,inv){
   const cur=R(curVal),ant=R(antVal);
@@ -1991,17 +2002,27 @@ function _resumoHeadCard(color,label,curVal,antVal,inv=false){
     <div class="resumo-hant">mês anterior: ${BRL(v.ant)}</div>
   </div>`;
 }
-function _insightICMS(dCur,dAnt,icmsCur,icmsAnt){
+function _insightICMS(dCur,dAnt,icmsCur,icmsAnt,smCur,smAnt){
   const vFat=_rvar(dCur.venda_bruta,dAnt.venda_bruta);
   const vTrib=_rvar(dCur.venda_trib,dAnt.venda_trib);
   const cTrib=_rvar(dCur.compras_trib,dAnt.compras_trib);
   const rec=_rvar(icmsCur,icmsAnt,true);
-  return `O faturamento <b>${_direcao(vFat)}</b> ${_fmtPctSigned(vFat)} em relação ao mês anterior. `
+  let txt=`O faturamento <b>${_direcao(vFat)}</b> ${_fmtPctSigned(vFat)} em relação ao mês anterior. `
     +`As vendas tributadas por ICMS ${_direcaoPl(vTrib)} ${_fmtPctSigned(vTrib)}, `
     +`${vTrib.up?'pressionando o débito de ICMS para cima':vTrib.down?'reduzindo a pressão sobre o débito de ICMS':'sem impacto relevante no débito'}. `
     +`Já as compras tributadas ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
     +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
     +`Como resultado, o <b>ICMS + ICMS-ST a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+  if(smCur&&smAnt){
+    const naoCredCur=smCur.icms_nao_cred_simples+smCur.icms_nao_cred_mei;
+    const naoCredAnt=smAnt.icms_nao_cred_simples+smAnt.icms_nao_cred_mei;
+    if(naoCredCur>0.005||naoCredAnt>0.005){
+      const nc=_rvar(naoCredCur,naoCredAnt,true);
+      txt+=` Além disso, o <b>ICMS não creditado</b> por compras de fornecedores do Simples Nacional e MEI `
+        +`<span class="${nc.cls}">${_direcao(nc)}</span> de ${BRL(nc.ant)} para <b>${BRL(nc.cur)}</b> (${nc.arrow} ${Math.abs(nc.pct).toFixed(1)}%).`;
+    }
+  }
+  return txt;
 }
 function _insightPIS(dCur,dAnt,pcCur,pcAnt){
   const vTrib=_rvar(dCur.venda_trib_pis,dAnt.venda_trib_pis);
@@ -2033,6 +2054,8 @@ function renderResumo(){
   const cur=_snapshotPeriodo(per.curP), ant=_snapshotPeriodo(per.antP);
   const dC=cur.d, dA=ant.d;
   const cargaCur=cur.icmsRec+cur.pcRec, cargaAnt=ant.icmsRec+ant.pcRec;
+  const naoCredCur=cur.sm.icms_nao_cred_simples+cur.sm.icms_nao_cred_mei;
+  const naoCredAnt=ant.sm.icms_nao_cred_simples+ant.sm.icms_nao_cred_mei;
 
   set('resumo-icms-th-cur',per.curLbl);set('resumo-icms-th-ant',per.antLbl);
   set('resumo-pis-th-cur',per.curLbl);set('resumo-pis-th-ant',per.antLbl);
@@ -2041,7 +2064,8 @@ function renderResumo(){
     _resumoHeadCard('#f5a623','Faturamento',dC.venda_bruta,dA.venda_bruta,false)+
     _resumoHeadCard('#ef5350','ICMS + ICMS-ST a Recolher',cur.icmsRec,ant.icmsRec,true)+
     _resumoHeadCard('#ab47bc','PIS/Cofins a Recolher',cur.pcRec,ant.pcRec,true)+
-    _resumoHeadCard('#4fc3f7','Carga Fiscal Total',cargaCur,cargaAnt,true)
+    _resumoHeadCard('#4fc3f7','Carga Fiscal Total',cargaCur,cargaAnt,true)+
+    _resumoHeadCard('#66bb6a','ICMS Não Creditado (Simples+MEI)',naoCredCur,naoCredAnt,true)
   );
 
   setH('resumo-icms-tbody',
@@ -2051,11 +2075,15 @@ function renderResumo(){
     _resumoRow('Compras Tributadas ICMS',dC.compras_trib,dA.compras_trib)+
     _resumoRow('Débito ICMS',dC.total_deb_icms,dA.total_deb_icms,true)+
     _resumoRow('Crédito ICMS',dC.total_cred_icms,dA.total_cred_icms)+
+    _resumoRow('Compras Simples Nacional *',cur.sm.compras_simples,ant.sm.compras_simples)+
+    _resumoRow('ICMS Não Creditado (Simples Nacional) *',cur.sm.icms_nao_cred_simples,ant.sm.icms_nao_cred_simples,true)+
+    _resumoRow('Compras MEI *',cur.sm.compras_mei,ant.sm.compras_mei)+
+    _resumoRow('ICMS Não Creditado (MEI) *',cur.sm.icms_nao_cred_mei,ant.sm.icms_nao_cred_mei,true)+
     _resumoRow('ICMS a Recolher (sem ST)',cur.icmsSemST,ant.icmsSemST,true)+
     _resumoRow('ICMS-ST (Produção)',cur.icmsST,ant.icmsST,true)+
     _resumoRow('ICMS + ICMS-ST a Recolher',cur.icmsRec,ant.icmsRec,true)
   );
-  setH('resumo-icms-insight',_insightICMS(dC,dA,cur.icmsRec,ant.icmsRec));
+  setH('resumo-icms-insight',_insightICMS(dC,dA,cur.icmsRec,ant.icmsRec,cur.sm,ant.sm));
 
   setH('resumo-pis-tbody',
     _resumoRow('Vendas Tributadas PIS/Cofins',dC.venda_trib_pis,dA.venda_trib_pis)+
@@ -2143,19 +2171,33 @@ function _snapshotProjetado(periodoAtual,diasInformados,diasTotais){
   selEl.removeChild(tempOpt);
   LOJAS.forEach(loja=>{if(DADOS[loja])delete DADOS[loja][PROJ_KEY];});
 
-  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec,ratio};
+  const smBase=_simplesMeiPeriodo(periodoAtual);
+  const sm={};
+  Object.keys(smBase).forEach(k=>{sm[k]=smBase[k]*ratio;});
+
+  return {d,icmsRec:icms.valor,icmsST:icms.icmsST,icmsSemST:icms.icmsSemST,pcRec,ratio,sm};
 }
-function _insightICMSProjecao(dCur,dAnt,icmsCur,icmsAnt){
+function _insightICMSProjecao(dCur,dAnt,icmsCur,icmsAnt,smCur,smAnt){
   const vFat=_rvar(dCur.venda_bruta,dAnt.venda_bruta);
   const vTrib=_rvar(dCur.venda_trib,dAnt.venda_trib);
   const cTrib=_rvar(dCur.compras_trib,dAnt.compras_trib);
   const rec=_rvar(icmsCur,icmsAnt,true);
-  return `O faturamento <b>projetado</b> ${_direcao(vFat)} ${_fmtPctSigned(vFat)} em relação ao mês anterior. `
+  let txt=`O faturamento <b>projetado</b> ${_direcao(vFat)} ${_fmtPctSigned(vFat)} em relação ao mês anterior. `
     +`As vendas tributadas por ICMS (projetadas) ${_direcaoPl(vTrib)} ${_fmtPctSigned(vTrib)}, `
     +`${vTrib.up?'pressionando o débito de ICMS para cima':vTrib.down?'reduzindo a pressão sobre o débito de ICMS':'sem impacto relevante no débito'}. `
     +`Já as compras tributadas (projetadas) ${_direcaoPl(cTrib)} ${_fmtPctSigned(cTrib)}, `
     +`${cTrib.up?'ampliando o crédito disponível':cTrib.down?'reduzindo o crédito disponível':'sem impacto relevante no crédito'}. `
     +`Com isso, a <b>projeção do ICMS + ICMS-ST a recolher</b> <span class="${rec.cls}">${_direcao(rec)}</span> de ${BRL(rec.ant)} para <b>${BRL(rec.cur)}</b> (${rec.arrow} ${Math.abs(rec.pct).toFixed(1)}%).`;
+  if(smCur&&smAnt){
+    const naoCredCur=smCur.icms_nao_cred_simples+smCur.icms_nao_cred_mei;
+    const naoCredAnt=smAnt.icms_nao_cred_simples+smAnt.icms_nao_cred_mei;
+    if(naoCredCur>0.005||naoCredAnt>0.005){
+      const nc=_rvar(naoCredCur,naoCredAnt,true);
+      txt+=` Além disso, a projeção do <b>ICMS não creditado</b> (Simples Nacional + MEI) `
+        +`<span class="${nc.cls}">${_direcao(nc)}</span> de ${BRL(nc.ant)} para <b>${BRL(nc.cur)}</b> (${nc.arrow} ${Math.abs(nc.pct).toFixed(1)}%).`;
+    }
+  }
+  return txt;
 }
 function _insightPISProjecao(dCur,dAnt,pcCur,pcAnt){
   const vTrib=_rvar(dCur.venda_trib_pis,dAnt.venda_trib_pis);
@@ -2217,6 +2259,8 @@ function renderResumoProjecao(){
   const ant=_snapshotPeriodo(antP);
   const dC=proj.d,dA=ant.d;
   const cargaCur=proj.icmsRec+proj.pcRec,cargaAnt=ant.icmsRec+ant.pcRec;
+  const naoCredCur=proj.sm.icms_nao_cred_simples+proj.sm.icms_nao_cred_mei;
+  const naoCredAnt=ant.sm.icms_nao_cred_simples+ant.sm.icms_nao_cred_mei;
 
   const n=_selectedEmps.size;
   const empLabel=n===LOJAS.length?'Todas as empresas':(n===1?[..._selectedEmps][0]:n+' empresas selecionadas');
@@ -2229,7 +2273,8 @@ function renderResumoProjecao(){
     _resumoHeadCard('#f5a623','Faturamento (projeção)',dC.venda_bruta,dA.venda_bruta,false)+
     _resumoHeadCard('#ef5350','ICMS + ICMS-ST a Recolher (projeção)',proj.icmsRec,ant.icmsRec,true)+
     _resumoHeadCard('#ab47bc','PIS/Cofins a Recolher (projeção)',proj.pcRec,ant.pcRec,true)+
-    _resumoHeadCard('#4fc3f7','Carga Fiscal Total (projeção)',cargaCur,cargaAnt,true)
+    _resumoHeadCard('#4fc3f7','Carga Fiscal Total (projeção)',cargaCur,cargaAnt,true)+
+    _resumoHeadCard('#66bb6a','ICMS Não Creditado (Simples+MEI, projeção)',naoCredCur,naoCredAnt,true)
   );
 
   setH('projecao-icms-tbody',
@@ -2239,11 +2284,15 @@ function renderResumoProjecao(){
     _resumoRow('Compras Tributadas ICMS',dC.compras_trib,dA.compras_trib)+
     _resumoRow('Débito ICMS',dC.total_deb_icms,dA.total_deb_icms,true)+
     _resumoRow('Crédito ICMS',dC.total_cred_icms,dA.total_cred_icms)+
+    _resumoRow('Compras Simples Nacional *',proj.sm.compras_simples,ant.sm.compras_simples)+
+    _resumoRow('ICMS Não Creditado (Simples Nacional) *',proj.sm.icms_nao_cred_simples,ant.sm.icms_nao_cred_simples,true)+
+    _resumoRow('Compras MEI *',proj.sm.compras_mei,ant.sm.compras_mei)+
+    _resumoRow('ICMS Não Creditado (MEI) *',proj.sm.icms_nao_cred_mei,ant.sm.icms_nao_cred_mei,true)+
     _resumoRow('ICMS a Recolher (sem ST)',proj.icmsSemST,ant.icmsSemST,true)+
     _resumoRow('ICMS-ST (Produção)',proj.icmsST,ant.icmsST,true)+
     _resumoRow('ICMS + ICMS-ST a Recolher',proj.icmsRec,ant.icmsRec,true)
   );
-  setH('projecao-icms-insight',_insightICMSProjecao(dC,dA,proj.icmsRec,ant.icmsRec));
+  setH('projecao-icms-insight',_insightICMSProjecao(dC,dA,proj.icmsRec,ant.icmsRec,proj.sm,ant.sm));
 
   setH('projecao-pis-tbody',
     _resumoRow('Vendas Tributadas PIS/Cofins',dC.venda_trib_pis,dA.venda_trib_pis)+
