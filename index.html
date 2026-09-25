@@ -1173,7 +1173,7 @@ tfoot td{
           <div class="apr-section-sub">ICMS a recolher e ICMS-ST, separados · percentual sobre o faturamento</div>
         </div>
         <div class="charts-row">
-          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS a Recolher</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-recolher"></canvas></div></div>
+          <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS a Recolher <span class="apr-pct" style="font-weight:400">— passe o mouse no mês para ver a justificativa</span></div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-recolher"></canvas></div></div>
           <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ab47bc"></div>ICMS-ST</div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-st"></canvas></div></div>
         </div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-recolher"></table></div></div>
@@ -1223,6 +1223,7 @@ const LOJAS=["LOJA 01", "LOJA 02", "LOJA 03", "LOJA 04", "LOJA 05", "PRODUCAO"];
 const PERIODOS=["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"];
 const LABELS=["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"];
 const SIMPLES_MEI={"2026-01":{"compras_simples":83996.0,"icms_nao_cred_simples":4493.46,"compras_mei":3118.0,"icms_nao_cred_mei":374.16},"2026-02":{"compras_simples":81876.92,"icms_nao_cred_simples":4758.54,"compras_mei":5100.0,"icms_nao_cred_mei":306.0},"2026-03":{"compras_simples":141352.8,"icms_nao_cred_simples":8450.48,"compras_mei":5845.5,"icms_nao_cred_mei":856.11},"2026-04":{"compras_simples":115858.73,"icms_nao_cred_simples":7055.06,"compras_mei":3232.0,"icms_nao_cred_mei":387.84},"2026-05":{"compras_simples":86404.78,"icms_nao_cred_simples":5199.19,"compras_mei":4151.0,"icms_nao_cred_mei":650.22},"2026-06":{"compras_simples":62268.25,"icms_nao_cred_simples":2939.97,"compras_mei":7485.0,"icms_nao_cred_mei":1094.1},"2026-07":{"compras_simples":93010.97,"icms_nao_cred_simples":6120.29,"compras_mei":4236.0,"icms_nao_cred_mei":508.32},"2026-08":{"compras_simples":62568.25,"icms_nao_cred_simples":3327.83,"compras_mei":4751.5,"icms_nao_cred_mei":703.23},"2026-09":{"compras_simples":0.0,"icms_nao_cred_simples":0.0,"compras_mei":0.0,"icms_nao_cred_mei":0.0}};
+const OCORRENCIAS={};
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const R=v=>typeof v==='number'?v:0;
 const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2554,7 +2555,7 @@ function _groupedBarChart(id,seriesDefs){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
-function _serieBarChart(id,data,cor){
+function _serieBarChart(id,data,cor,afterBodyFn){
   DC(id);
   const canvas=document.getElementById(id);
   if(!canvas||typeof Chart==='undefined')return;
@@ -2562,9 +2563,64 @@ function _serieBarChart(id,data,cor){
     type:'bar',
     data:{labels:LABELS,datasets:[{data,backgroundColor:hexToRgba(cor,.75),borderRadius:4,maxBarThickness:34}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{...TTP}},
+      plugins:{legend:{display:false},tooltip:{...TTP,
+        callbacks:{...TTP.callbacks,...(afterBodyFn?{afterBody:items=>afterBodyFn(items[0].dataIndex)}:{})}}},
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
+}
+// Quebra um texto em várias linhas curtas p/ caber no tooltip do Chart.js (que não faz wrap sozinho).
+function _wrapText(text,width){
+  const words=text.split(' ');
+  const lines=[];let cur='';
+  words.forEach(w=>{
+    if((cur+' '+w).trim().length>width){lines.push(cur.trim());cur=w;}
+    else cur=(cur+' '+w).trim();
+  });
+  if(cur)lines.push(cur.trim());
+  return lines;
+}
+// Justificativa automática do ICMS a Recolher do mês, comparado ao mês anterior.
+function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
+  if(i===0)return ['Primeiro mês da série — sem mês anterior para comparar.'];
+  const fat=_rvar(svBruta[i],svBruta[i-1]);
+  const pctTribCur=svBruta[i]>0?svTrib[i]/svBruta[i]*100:0;
+  const pctTribAnt=svBruta[i-1]>0?svTrib[i-1]/svBruta[i-1]*100:0;
+  const compras=_rvar(cBruta[i],cBruta[i-1]);
+  const comprasTrib=_rvar(cTrib[i],cTrib[i-1]);
+  const ratioCur=svBruta[i]>0?cBruta[i]/svBruta[i]*100:0;
+
+  const l=[];
+  l.push(`Faturamento ${_direcao(fat)} ${_fmtPctSigned(fat)} em relação ao mês anterior.`);
+  const dPct=pctTribCur-pctTribAnt;
+  if(Math.abs(dPct)>=0.5){
+    l.push(`Vendas tributadas ficaram ${dPct>0?'mais':'menos'} representativas no faturamento `
+      +`(${pctTribCur.toFixed(1)}% vs ${pctTribAnt.toFixed(1)}% no mês anterior), `
+      +`${dPct>0?'pressionando o débito de ICMS para cima':'aliviando o débito de ICMS'}.`);
+  }
+  l.push(`Compras ${_direcao(compras)} ${_fmtPctSigned(compras)} e compras tributadas ${_direcao(comprasTrib)} ${_fmtPctSigned(comprasTrib)}, `
+    +`${comprasTrib.up?'ampliando':comprasTrib.down?'reduzindo':'sem alterar muito'} o crédito disponível no mês.`);
+  if(ratioCur<65){
+    l.push(`Compras totais representam ${ratioCur.toFixed(1)}% do faturamento — abaixo da faixa saudável (65%–75%). `
+      +`Menos crédito neste mês; pode ser reflexo de um estoque comprado em mês anterior sendo vendido agora sem reposição `
+      +`proporcional, o que tende a exigir compras maiores no(s) próximo(s) mês(es).`);
+  }else if(ratioCur>75){
+    l.push(`Compras totais representam ${ratioCur.toFixed(1)}% do faturamento — acima da faixa saudável (65%–75%), `
+      +`possível formação de estoque para os próximos meses.`);
+  }else{
+    l.push(`Compras totais em ${ratioCur.toFixed(1)}% do faturamento — dentro da faixa saudável (65%–75%).`);
+  }
+  return l;
+}
+function _tooltipJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
+  const frases=_justificativaICMS(i,svBruta,svTrib,cBruta,cTrib);
+  const linhas=['','Por que esse valor? ⓘ'];
+  frases.forEach(f=>{linhas.push(..._wrapText(f,54));});
+  const obs=OCORRENCIAS[PERIODOS[i]]?.icms;
+  if(obs){
+    linhas.push('','📝 Observação:');
+    linhas.push(..._wrapText(obs,54));
+  }
+  return linhas;
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2663,7 +2719,7 @@ function renderApresentacao(){
 
   const serRec=_serieICMSRecolherST();
   const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
-  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350');
+  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_tooltipJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib));
   _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
   _aprTabelaComTotal('apr-tb-icms-recolher',[
     {label:'ICMS a Recolher',data:serRec.semST,pctBase:svBruta,pctSuffix:'do fat.'},
