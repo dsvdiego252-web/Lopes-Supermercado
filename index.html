@@ -1127,14 +1127,14 @@ tfoot td{
 
     <div id="apr-icms-content">
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Faturamento</div><div class="apr-section-sub">vendas tributadas, ST e isentas — soma = faturamento bruto</div></div>
+        <div class="apr-section-hd"><div class="apr-section-title">Faturamento</div><div class="apr-section-sub">barra = faturamento bruto · linhas = vendas tributadas, ST e isentas</div></div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-vendas"></canvas></div></div>
         <div class="apr-mini-grid" id="apr-mini-icms-devolucao" style="margin-top:10px"></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-vendas"></table></div></div>
       </div>
 
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Compras</div><div class="apr-section-sub">compras tributadas, ST e isentas — soma = compras bruto</div></div>
+        <div class="apr-section-hd"><div class="apr-section-title">Compras</div><div class="apr-section-sub">barra = compras bruto · linhas = compras tributadas, ST e isentas</div></div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-icms-compras"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-compras"></table></div></div>
       </div>
@@ -1163,13 +1163,13 @@ tfoot td{
 
     <div id="apr-pis-content" style="display:none">
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Vendas — Base PIS/Cofins</div><div class="apr-section-sub">tributadas e alíquota zero — soma = faturamento bruto</div></div>
+        <div class="apr-section-hd"><div class="apr-section-title">Vendas — Base PIS/Cofins</div><div class="apr-section-sub">barra = faturamento bruto · linhas = tributadas e alíquota zero</div></div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-vendas"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-vendas"></table></div></div>
       </div>
 
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Compras — Base PIS/Cofins</div><div class="apr-section-sub">tributadas e alíquota zero</div></div>
+        <div class="apr-section-hd"><div class="apr-section-title">Compras — Base PIS/Cofins</div><div class="apr-section-sub">barra = compras bruto · linhas = tributadas e alíquota zero</div></div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:220px;position:relative"><canvas id="apr-ch-pis-compras"></canvas></div></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-compras"></table></div></div>
       </div>
@@ -2477,19 +2477,28 @@ function _miniBarChart(id,data,color){
       scales:{x:{display:false},y:{display:false}}}
   });
 }
-function _stackedBarChart(id,seriesDefs){
+function _totalComLinhasChart(id,totalData,totalLabel,linhas){
+  // Barra = total (fundo neutro) + uma linha por categoria (mesma escala, sem eixo duplo).
+  // Linhas deixam mais fácil comparar a tendência de cada categoria mês a mês do que uma
+  // barra empilhada, onde o segmento do meio "flutua" conforme os segmentos abaixo mudam.
   DC(id);
   const canvas=document.getElementById(id);
   if(!canvas||typeof Chart==='undefined')return;
+  const datasets=[
+    {type:'bar',label:totalLabel,data:totalData,backgroundColor:'rgba(86,96,124,.32)',
+      borderColor:'rgba(86,96,124,.55)',borderWidth:1,borderRadius:3,maxBarThickness:40,order:2},
+    ...linhas.map(l=>({type:'line',label:l.label,data:l.data,borderColor:l.cor,backgroundColor:l.cor,
+      borderWidth:2,pointRadius:3,pointBackgroundColor:l.cor,pointBorderColor:'#0f1319',pointBorderWidth:1,
+      tension:.3,fill:false,order:1})),
+  ];
   _CH[id]=new Chart(canvas,{
     type:'bar',
-    data:{labels:LABELS,datasets:seriesDefs.map(s=>({label:s.label,data:s.data,backgroundColor:s.cor,borderRadius:2,maxBarThickness:34}))},
+    data:{labels:LABELS,datasets},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{legend:{position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:10},boxWidth:9,padding:8}},
         tooltip:{...TTP}},
-      scales:{x:{stacked:true,grid:GR,ticks:TK},
-        y:{stacked:true,grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
 function _groupedBarChart(id,seriesDefs){
@@ -2555,7 +2564,7 @@ function renderApresentacao(){
 
   // ── ICMS ──
   const svTrib=getSerie('venda_trib'),svST=getSerie('venda_st'),svIsen=getSerie('venda_isenta'),svDev=getSerie('dev_venda'),svBruta=getSerie('venda_bruta');
-  _stackedBarChart('apr-ch-icms-vendas',[
+  _totalComLinhasChart('apr-ch-icms-vendas',svBruta,'Faturamento Bruto',[
     {label:'Tributada',data:svTrib,cor:'#4fc3f7'},{label:'ST',data:svST,cor:'#ab47bc'},{label:'Isenta',data:svIsen,cor:'#66bb6a'},
   ]);
   _aprTabelaComTotal('apr-tb-icms-vendas',[
@@ -2571,7 +2580,7 @@ function renderApresentacao(){
   _miniBarChart('apr-mc-devolucao',svDev,'#ef5350');
 
   const cTrib=getSerie('compras_trib'),cST=getSerie('compras_st'),cIsen=getSerie('compras_isentas'),cBruta=getSerie('compras_bruto');
-  _stackedBarChart('apr-ch-icms-compras',[
+  _totalComLinhasChart('apr-ch-icms-compras',cBruta,'Compras Bruto',[
     {label:'Tributada',data:cTrib,cor:'#4fc3f7'},{label:'ST',data:cST,cor:'#ab47bc'},{label:'Isenta',data:cIsen,cor:'#66bb6a'},
   ]);
   _aprTabelaComTotal('apr-tb-icms-compras',[
@@ -2595,13 +2604,13 @@ function renderApresentacao(){
 
   // ── PIS/Cofins ──
   const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
-  _stackedBarChart('apr-ch-pis-vendas',[{label:'Tributada',data:pvTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pvZero,cor:'#66bb6a'}]);
+  _totalComLinhasChart('apr-ch-pis-vendas',svBruta,'Faturamento Bruto',[{label:'Tributada',data:pvTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pvZero,cor:'#66bb6a'}]);
   _aprTabelaComTotal('apr-tb-pis-vendas',[
     {label:'Vendas Tributadas PIS/Cofins',data:pvTrib},{label:'Vendas Alíquota Zero',data:pvZero},
   ],'FATURAMENTO BRUTO',svBruta);
 
   const pcTrib=getSerie('compras_trib_pis'),pcZero=getSerie('compras_aliq_zero');
-  _stackedBarChart('apr-ch-pis-compras',[{label:'Tributada',data:pcTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pcZero,cor:'#66bb6a'}]);
+  _totalComLinhasChart('apr-ch-pis-compras',cBruta,'Compras Bruto',[{label:'Tributada',data:pcTrib,cor:'#4fc3f7'},{label:'Alíquota Zero',data:pcZero,cor:'#66bb6a'}]);
   _aprTabelaComTotal('apr-tb-pis-compras',[
     {label:'Compras Tributadas PIS/Cofins',data:pcTrib},{label:'Compras Alíquota Zero',data:pcZero},
   ],'COMPRAS BRUTO',cBruta);
