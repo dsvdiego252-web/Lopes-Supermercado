@@ -2615,16 +2615,23 @@ function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
   return l;
 }
 // Preenche o card de justificativa (abaixo do gráfico) ao clicar em um mês.
+let _aprJustMesAberto=null;
+function _aprFecharJustificativa(){
+  const painel=document.getElementById('apr-just-icms');
+  if(painel){painel.style.display='none';painel.innerHTML='';}
+  _aprJustMesAberto=null;
+}
 function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
   const painel=document.getElementById('apr-just-icms');
   if(!painel)return;
+  if(_aprJustMesAberto===i){_aprFecharJustificativa();return;}
   const frases=_justificativaICMS(i,svBruta,svTrib,cBruta,cTrib);
   const per=PERIODOS[i];
   const obs=OCORRENCIAS[per]?.icms;
   let html=`<div class="apr-just-hd">
       <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — por que esse valor?</div>
       <div class="apr-just-val">ICMS a Recolher: ${BRL(valorMes)}</div>
-      <button class="apr-just-close" onclick="document.getElementById('apr-just-icms').style.display='none'">✕</button>
+      <button class="apr-just-close" onclick="_aprFecharJustificativa()">✕</button>
     </div>
     <div class="apr-just-body">`
     + frases.map(f=>`<p>${f}</p>`).join('');
@@ -2632,6 +2639,7 @@ function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
   html+='</div>';
   painel.innerHTML=html;
   painel.style.display='';
+  _aprJustMesAberto=i;
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2730,8 +2738,7 @@ function renderApresentacao(){
 
   const serRec=_serieICMSRecolherST();
   const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
-  const painelJust=document.getElementById('apr-just-icms');
-  if(painelJust){painelJust.style.display='none';painelJust.innerHTML='';}
+  _aprFecharJustificativa();
   _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,serRec.semST[i]));
   _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
   _aprTabelaComTotal('apr-tb-icms-recolher',[
