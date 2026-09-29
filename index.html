@@ -2690,14 +2690,14 @@ function _renderTopProdutos(i,painelId,dataObj,label,tipo){
   }else{
     const colPrincipal=tipo==='credito'?'Crédito':'Débito';
     const colSecundaria=tipo==='credito'?'Débito (vendas)':'Crédito (compras)';
-    html+=`<div class="tscroll"><table><thead><tr><th>Produto</th><th class="r">${colPrincipal}</th><th class="r">% do ${tituloTipo}</th><th class="r">${colSecundaria}</th></tr></thead><tbody>`
+    html+=`<div class="tscroll"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colPrincipal}</th><th class="r">% do ${tituloTipo}</th><th class="r">${colSecundaria}</th></tr></thead><tbody>`
       + lista.map(p=>{
           const valorPrincipal=tipo==='credito'?p.credito:p.debito;
           const valorSecundario=tipo==='credito'?p.debito:p.credito;
           const pct=totalPrincipal>0?(valorPrincipal/totalPrincipal*100).toFixed(1)+'%':'—';
           const semTxt=tipo==='credito'?'sem débito no mês':'sem crédito no mês';
           const secTxt=valorSecundario>0.005?BRL(valorSecundario):`<span class="apr-pct">${semTxt}</span>`;
-          return `<tr><td>${p.produto}</td><td class="r">${BRL(valorPrincipal)}</td><td class="r">${pct}</td><td class="r">${secTxt}</td></tr>`;
+          return `<tr><td>${p.codigo||'—'}</td><td>${p.produto}</td><td class="r">${BRL(valorPrincipal)}</td><td class="r">${pct}</td><td class="r">${secTxt}</td></tr>`;
         }).join('')
       + '</tbody></table></div>';
   }
