@@ -1191,6 +1191,15 @@ tfoot td{
         <div id="apr-just-icms" class="apr-just-card" style="display:none"></div>
         <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-icms-recolher"></table></div></div>
       </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd">
+          <div class="apr-section-title">🏆 Produtos</div>
+          <div class="apr-section-sub">débito de ICMS nas vendas, por produto · consolidado do grupo, sem quebra por loja · clique no mês para ver o ranking</div>
+        </div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-icms"></canvas></div></div>
+        <div id="apr-just-produtos-icms" class="apr-just-card" style="display:none"></div>
+      </div>
     </div>
 
     <div id="apr-pis-content" style="display:none">
@@ -1224,6 +1233,15 @@ tfoot td{
           <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-cred"></table></div></div>
         </div>
       </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd">
+          <div class="apr-section-title">🏆 Produtos</div>
+          <div class="apr-section-sub">débito de PIS/Cofins nas vendas, por produto · consolidado do grupo, sem quebra por loja · clique no mês para ver o ranking</div>
+        </div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-pis"></canvas></div></div>
+        <div id="apr-just-produtos-pis" class="apr-just-card" style="display:none"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1237,6 +1255,8 @@ const PERIODOS=["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"
 const LABELS=["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"];
 const SIMPLES_MEI={"2026-01":{"compras_simples":83996.0,"icms_nao_cred_simples":4493.46,"compras_mei":3118.0,"icms_nao_cred_mei":374.16},"2026-02":{"compras_simples":81876.92,"icms_nao_cred_simples":4758.54,"compras_mei":5100.0,"icms_nao_cred_mei":306.0},"2026-03":{"compras_simples":141352.8,"icms_nao_cred_simples":8450.48,"compras_mei":5845.5,"icms_nao_cred_mei":856.11},"2026-04":{"compras_simples":115858.73,"icms_nao_cred_simples":7055.06,"compras_mei":3232.0,"icms_nao_cred_mei":387.84},"2026-05":{"compras_simples":86404.78,"icms_nao_cred_simples":5199.19,"compras_mei":4151.0,"icms_nao_cred_mei":650.22},"2026-06":{"compras_simples":62268.25,"icms_nao_cred_simples":2939.97,"compras_mei":7485.0,"icms_nao_cred_mei":1094.1},"2026-07":{"compras_simples":93010.97,"icms_nao_cred_simples":6120.29,"compras_mei":4236.0,"icms_nao_cred_mei":508.32},"2026-08":{"compras_simples":62568.25,"icms_nao_cred_simples":3327.83,"compras_mei":4751.5,"icms_nao_cred_mei":703.23},"2026-09":{"compras_simples":0.0,"icms_nao_cred_simples":0.0,"compras_mei":0.0,"icms_nao_cred_mei":0.0}};
 const OCORRENCIAS={"2026-08":{"icms":"Os Produtos de Limpeza e Rações sairam da ST e a partir desse mês são tributados"}};
+const PRODUTOS_ICMS={};
+const PRODUTOS_PIS={};
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const R=v=>typeof v==='number'?v:0;
 const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2615,23 +2635,25 @@ function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
   return l;
 }
 // Preenche o card de justificativa (abaixo do gráfico) ao clicar em um mês.
-let _aprJustMesAberto=null;
-function _aprFecharJustificativa(){
-  const painel=document.getElementById('apr-just-icms');
+// Controle genérico de abrir/fechar dos cards clicáveis da Apresentação (justificativa, produtos).
+let _aprAbertos={};
+function _aprFecharPainel(painelId){
+  const painel=document.getElementById(painelId);
   if(painel){painel.style.display='none';painel.innerHTML='';}
-  _aprJustMesAberto=null;
+  delete _aprAbertos[painelId];
 }
 function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
-  const painel=document.getElementById('apr-just-icms');
+  const painelId='apr-just-icms';
+  const painel=document.getElementById(painelId);
   if(!painel)return;
-  if(_aprJustMesAberto===i){_aprFecharJustificativa();return;}
+  if(_aprAbertos[painelId]===i){_aprFecharPainel(painelId);return;}
   const frases=_justificativaICMS(i,svBruta,svTrib,cBruta,cTrib);
   const per=PERIODOS[i];
   const obs=OCORRENCIAS[per]?.icms;
   let html=`<div class="apr-just-hd">
       <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — por que esse valor?</div>
       <div class="apr-just-val">ICMS a Recolher: ${BRL(valorMes)}</div>
-      <button class="apr-just-close" onclick="_aprFecharJustificativa()">✕</button>
+      <button class="apr-just-close" onclick="_aprFecharPainel('${painelId}')">✕</button>
     </div>
     <div class="apr-just-body">`
     + frases.map(f=>`<p>${f}</p>`).join('');
@@ -2639,7 +2661,34 @@ function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
   html+='</div>';
   painel.innerHTML=html;
   painel.style.display='';
-  _aprJustMesAberto=i;
+  _aprAbertos[painelId]=i;
+}
+// Ranking de produtos com maior débito de ICMS/PIS-Cofins no mês (clique no gráfico "Produtos").
+function _renderTopProdutos(i,painelId,dataObj,label){
+  const painel=document.getElementById(painelId);
+  if(!painel)return;
+  if(_aprAbertos[painelId]===i){_aprFecharPainel(painelId);return;}
+  const per=PERIODOS[i];
+  const info=dataObj[per];
+  let html=`<div class="apr-just-hd">
+      <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — produtos com maior débito de ${label}</div>
+      <button class="apr-just-close" onclick="_aprFecharPainel('${painelId}')">✕</button>
+    </div>`;
+  if(!info||!info.top||!info.top.length){
+    html+='<div class="apr-just-body"><p>Sem dados de produtos para este mês.</p></div>';
+  }else{
+    const total=info.total||0;
+    html+='<div class="tscroll"><table><thead><tr><th>Produto</th><th class="r">Débito</th><th class="r">% do débito</th><th class="r">Crédito (compras)</th></tr></thead><tbody>'
+      + info.top.map(p=>{
+          const pct=total>0?(p.debito/total*100).toFixed(1)+'%':'—';
+          const credTxt=p.credito>0.005?BRL(p.credito):'<span class="apr-pct">sem crédito no mês</span>';
+          return `<tr><td>${p.produto}</td><td class="r">${BRL(p.debito)}</td><td class="r">${pct}</td><td class="r">${credTxt}</td></tr>`;
+        }).join('')
+      + '</tbody></table></div>';
+  }
+  painel.innerHTML=html;
+  painel.style.display='';
+  _aprAbertos[painelId]=i;
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2738,7 +2787,7 @@ function renderApresentacao(){
 
   const serRec=_serieICMSRecolherST();
   const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
-  _aprFecharJustificativa();
+  ['apr-just-icms','apr-just-produtos-icms','apr-just-produtos-pis'].forEach(_aprFecharPainel);
   _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,serRec.semST[i]));
   _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
   _aprTabelaComTotal('apr-tb-icms-recolher',[
@@ -2748,6 +2797,9 @@ function renderApresentacao(){
 
   _aprGrupo('apr-mini-icms-deb','apr-tb-icms-deb',APR_ICMS_DEB,'total_deb_icms');
   _aprGrupo('apr-mini-icms-cred','apr-tb-icms-cred',APR_ICMS_CRED,'total_cred_icms');
+
+  _serieBarChart('apr-ch-produtos-icms',PERIODOS.map(p=>PRODUTOS_ICMS[p]?.total||0),'#ef5350',
+    i=>_renderTopProdutos(i,'apr-just-produtos-icms',PRODUTOS_ICMS,'ICMS'));
 
   // ── PIS/Cofins ──
   const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
@@ -2779,6 +2831,9 @@ function renderApresentacao(){
   _aprTabelaComTotal('apr-tb-pis-cred',
     [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado *',data:naoAprov}],
     'TOTAL', getSerie('total_cred_pis'));
+
+  _serieBarChart('apr-ch-produtos-pis',PERIODOS.map(p=>PRODUTOS_PIS[p]?.total||0),'#ef5350',
+    i=>_renderTopProdutos(i,'apr-just-produtos-pis',PRODUTOS_PIS,'PIS/Cofins'));
 }
 function capturarApresentacao(){_capturarPrint('apresentacao-capture','apr-print-btn','apr-periodo-label','Apresentacao_Impostos');}
 
