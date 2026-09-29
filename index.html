@@ -573,6 +573,13 @@ tfoot td{
 .apr-just-body p{margin:0 0 8px}
 .apr-just-body p:last-child{margin-bottom:0}
 .apr-just-obs{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);color:var(--muted);font-style:italic}
+.apr-just-modo{display:flex;gap:8px;margin:2px 0 12px}
+.apr-just-modo-btn{font-family:var(--fm);font-size:9.5px;font-weight:700;letter-spacing:.03em;padding:4px 10px;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);border:1px solid var(--border);border-radius:8px;
+  background:var(--surface2);transition:all .15s}
+.apr-just-modo-btn:hover{color:var(--text);border-color:var(--border2)}
+.apr-just-modo-btn.active{color:#0a0d12;background:var(--accent);border-color:var(--accent)}
+.apr-escopo-nota{color:var(--muted);font-style:italic}
 @media(max-width:680px){
   .apr-mini-grid{grid-template-columns:repeat(2,1fr)}
 }
@@ -1195,7 +1202,7 @@ tfoot td{
       <div class="apr-section">
         <div class="apr-section-hd">
           <div class="apr-section-title">🏆 Produtos</div>
-          <div class="apr-section-sub">débito e crédito de ICMS por produto · consolidado do grupo, sem quebra por loja · clique na barra (débito ou crédito) para ver o ranking do mês</div>
+          <div class="apr-section-sub">débito e crédito de ICMS por produto<span id="apr-produtos-icms-escopo" class="apr-escopo-nota"></span> · clique na barra (débito ou crédito) para ver o ranking do mês</div>
         </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-icms"></canvas></div></div>
         <div id="apr-just-produtos-icms" class="apr-just-card" style="display:none"></div>
@@ -1236,8 +1243,18 @@ tfoot td{
 
       <div class="apr-section">
         <div class="apr-section-hd">
+          <div class="apr-section-title">PIS/Cofins a Recolher</div>
+          <div class="apr-section-sub">percentual sobre o faturamento · clique no mês para ver a justificativa</div>
+        </div>
+        <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-pis-recolher"></canvas></div></div>
+        <div id="apr-just-pis" class="apr-just-card" style="display:none"></div>
+        <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-recolher"></table></div></div>
+      </div>
+
+      <div class="apr-section">
+        <div class="apr-section-hd">
           <div class="apr-section-title">🏆 Produtos</div>
-          <div class="apr-section-sub">débito e crédito de PIS/Cofins por produto · consolidado do grupo, sem quebra por loja · clique na barra (débito ou crédito) para ver o ranking do mês</div>
+          <div class="apr-section-sub">débito e crédito de PIS/Cofins por produto<span id="apr-produtos-pis-escopo" class="apr-escopo-nota"></span> · clique na barra (débito ou crédito) para ver o ranking do mês</div>
         </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-pis"></canvas></div></div>
         <div id="apr-just-produtos-pis" class="apr-just-card" style="display:none"></div>
@@ -1257,6 +1274,8 @@ const SIMPLES_MEI={"2026-01":{"compras_simples":83996.0,"icms_nao_cred_simples":
 const OCORRENCIAS={"2026-08":{"icms":"Os Produtos de Limpeza e Rações sairam da ST e a partir desse mês são tributados"}};
 const PRODUTOS_ICMS={"2026-07":{"totalDebito":421723.17,"totalCredito":214739.38,"topDebito":[{"codigo":"40081","produto":"QUEIJO MUCARELA RIO MINAS KG FATIADO","debito":13516.64,"credito":0.0},{"codigo":"373","produto":"ACEM LOPES KG","debito":8698.43,"credito":0.0},{"codigo":"512","produto":"FP PAO FRANCES KG","debito":7171.0,"credito":0.0},{"codigo":"519","produto":"OLEO SOJA ABC 900ML","debito":6152.91,"credito":6471.75},{"codigo":"64657","produto":"QUEIJO MUCARELA TAQUARI KG FT","debito":3897.17,"credito":0.0},{"codigo":"7640","produto":"FRIOS QUEIJO MUCARELA FRIMESA KG","debito":3884.47,"credito":0.0},{"codigo":"64656","produto":"QUEIJO MUCARELA TAQUARI KG","debito":3708.73,"credito":8996.25},{"codigo":"677","produto":"COXAO MOLE LOPES KG","debito":3563.16,"credito":0.0},{"codigo":"1253","produto":"CAFE LA SANTE 500G TRADICIONAL","debito":3350.74,"credito":3724.07},{"codigo":"673","produto":"COXAO DURO LOPES KG","debito":3333.31,"credito":0.0},{"codigo":"685","produto":"CONTRA FILE LOPES KG","debito":3101.04,"credito":0.0},{"codigo":"14563","produto":"ACUCAR CRISTAL SANTA ISABEL 5KG","debito":2945.59,"credito":3380.25},{"codigo":"202","produto":"ALHO KG","debito":2906.2,"credito":3192.08},{"codigo":"16142","produto":"FILE FRANGO RESF KG","debito":2872.39,"credito":0.0},{"codigo":"47107","produto":"CAFE LA SANTE 500G EXTRA FORTE","debito":2444.93,"credito":2926.06},{"codigo":"64596","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":2439.62,"credito":1129.73},{"codigo":"62979","produto":"PAPEL HIG FD MILI 60M 6UN NEUTRO","debito":2428.48,"credito":833.6},{"codigo":"573","produto":"MUSCULO LOPES KG TRASEIRO","debito":2410.38,"credito":0.0},{"codigo":"60090","produto":"CAFE VELHO CAFE 500G","debito":2400.62,"credito":0.0},{"codigo":"1135","produto":"BACON FRIMESA KG MANTA","debito":2264.84,"credito":1635.92}],"topCredito":[{"codigo":"39605.0","produto":"QUEIJO MUCARELA RIO MINAS KG","debito":461.86,"credito":9193.86},{"codigo":"64656.0","produto":"QUEIJO MUCARELA TAQUARI KG","debito":3708.73,"credito":8996.25},{"codigo":"519.0","produto":"OLEO SOJA ABC 900ML","debito":6152.91,"credito":6471.75},{"codigo":"622.0","produto":"ARROZ PANELA FERRO 5KG TP1","debito":0.0,"credito":4294.64},{"codigo":"1253.0","produto":"CAFE LA SANTE 500G TRADICIONAL","debito":3350.74,"credito":3724.07},{"codigo":"58780.0","produto":"58780.0","debito":0.0,"credito":3719.75},{"codigo":"8190.0","produto":"OLEO SOJA LIZA 900ML","debito":2004.68,"credito":3483.39},{"codigo":"14563.0","produto":"ACUCAR CRISTAL SANTA ISABEL 5KG","debito":2945.59,"credito":3380.25},{"codigo":"202.0","produto":"ALHO KG","debito":2906.2,"credito":3192.08},{"codigo":"61328.0","produto":"61328.0","debito":0.0,"credito":2940.34},{"codigo":"47107.0","produto":"CAFE LA SANTE 500G EXTRA FORTE","debito":2444.93,"credito":2926.06},{"codigo":"5175.0","produto":"FARINHA TRIGO LIVIA 1KG TP1","debito":1829.54,"credito":2829.58},{"codigo":"33173.0","produto":"33173.0","debito":0.0,"credito":1998.35},{"codigo":"60206.0","produto":"60206.0","debito":0.0,"credito":1980.57},{"codigo":"54020.0","produto":"54020.0","debito":0.0,"credito":1712.53},{"codigo":"1135.0","produto":"BACON FRIMESA KG MANTA","debito":2264.84,"credito":1635.92},{"codigo":"1126.0","produto":"APERIT CAMPARI 748ML","debito":826.0,"credito":1184.7},{"codigo":"64596.0","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":2439.62,"credito":1129.73},{"codigo":"48391.0","produto":"48391.0","debito":0.0,"credito":1109.9},{"codigo":"56195.0","produto":"BACON REAL KG","debito":1837.96,"credito":1092.45}]},"2026-08":{"totalDebito":462977.31,"totalCredito":158262.53,"topDebito":[{"codigo":"40081","produto":"QUEIJO MUCARELA RIO MINAS KG FATIADO","debito":11776.01,"credito":0.0},{"codigo":"373","produto":"ACEM LOPES KG","debito":8085.12,"credito":0.0},{"codigo":"512","produto":"FP PAO FRANCES KG","debito":6574.64,"credito":0.0},{"codigo":"64657","produto":"QUEIJO MUCARELA TAQUARI KG FT","debito":6374.22,"credito":0.0},{"codigo":"519","produto":"OLEO SOJA ABC 900ML","debito":5218.78,"credito":0.0},{"codigo":"64656","produto":"QUEIJO MUCARELA TAQUARI KG","debito":5147.01,"credito":0.0},{"codigo":"677","produto":"COXAO MOLE LOPES KG","debito":3541.24,"credito":0.0},{"codigo":"685","produto":"CONTRA FILE LOPES KG","debito":3184.73,"credito":0.0},{"codigo":"673","produto":"COXAO DURO LOPES KG","debito":3164.47,"credito":0.0},{"codigo":"14563","produto":"ACUCAR CRISTAL SANTA ISABEL 5KG","debito":3082.61,"credito":1910.58},{"codigo":"16142","produto":"FILE FRANGO RESF KG","debito":2852.76,"credito":0.0},{"codigo":"202","produto":"ALHO KG","debito":2778.81,"credito":2240.07},{"codigo":"60090","produto":"CAFE VELHO CAFE 500G","debito":2588.82,"credito":1724.85},{"codigo":"573","produto":"MUSCULO LOPES KG TRASEIRO","debito":2471.65,"credito":0.0},{"codigo":"62979","produto":"PAPEL HIG FD MILI 60M 6UN NEUTRO","debito":2371.87,"credito":258.3},{"codigo":"1369","produto":"CAFE TERREIRO 500G","debito":2367.49,"credito":2730.1},{"codigo":"64596","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":2350.97,"credito":806.46},{"codigo":"1253","produto":"CAFE LA SANTE 500G TRADICIONAL","debito":2318.51,"credito":997.55},{"codigo":"59004","produto":"PAPEL HIG FD ATUALLE 20M 12UN","debito":2160.71,"credito":297.04},{"codigo":"49545","produto":"FRALDINHA LOPES KG NA MANTEIGA","debito":2094.62,"credito":0.0}],"topCredito":[{"codigo":"39605.0","produto":"QUEIJO MUCARELA RIO MINAS KG","debito":570.71,"credito":4226.66},{"codigo":"58780.0","produto":"58780.0","debito":0.0,"credito":3991.92},{"codigo":"1369.0","produto":"CAFE TERREIRO 500G","debito":2367.49,"credito":2730.1},{"codigo":"622.0","produto":"ARROZ PANELA FERRO 5KG TP1","debito":0.0,"credito":2652.05},{"codigo":"60841.0","produto":"OLEO SOJA VITALIV 900ML","debito":257.63,"credito":2642.67},{"codigo":"202.0","produto":"ALHO KG","debito":2778.81,"credito":2240.07},{"codigo":"14563.0","produto":"ACUCAR CRISTAL SANTA ISABEL 5KG","debito":3082.61,"credito":1910.58},{"codigo":"61328.0","produto":"61328.0","debito":0.0,"credito":1901.5},{"codigo":"595.0","produto":"ARROZ CAPITOLIO 5KG TP1","debito":0.0,"credito":1829.65},{"codigo":"51427.0","produto":"SABAO PO OMO 700G CX LAVAGEM PERF","debito":1719.7,"credito":1725.52},{"codigo":"60090.0","produto":"CAFE VELHO CAFE 500G","debito":2588.82,"credito":1724.85},{"codigo":"6801.0","produto":"ESPONJA ACO BOMBRIL 45G","debito":1196.43,"credito":1609.2},{"codigo":"54020.0","produto":"54020.0","debito":0.0,"credito":1422.48},{"codigo":"60206.0","produto":"60206.0","debito":0.0,"credito":1401.78},{"codigo":"5411.0","produto":"FEIJAO CARIOCA DU LINO 2KG","debito":0.0,"credito":1255.8},{"codigo":"48391.0","produto":"48391.0","debito":0.0,"credito":1039.06},{"codigo":"1253.0","produto":"CAFE LA SANTE 500G TRADICIONAL","debito":2318.51,"credito":997.55},{"codigo":"13671.0","produto":"AGUA MINERAL CRYSTAL 500ML C/GAS","debito":1990.01,"credito":947.27},{"codigo":"1290.0","produto":"CAFE MOURA 500G","debito":486.22,"credito":907.14},{"codigo":"64596.0","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":2350.97,"credito":806.46}]}};
 const PRODUTOS_PIS={"2026-07":{"totalDebito":232012.1,"totalCredito":137959.14,"topDebito":[{"codigo":"10648","produto":"ROTISSERIE MARMITEX KG","debito":11219.04,"credito":0.0},{"codigo":"64667","produto":"FP PAO DE QUEIJO UN","debito":4076.72,"credito":0.0},{"codigo":"14015","produto":"PRESUNTO REAL KG FAT","debito":2289.91,"credito":0.0},{"codigo":"10633","produto":"FP ROSCA KG","debito":2228.15,"credito":0.0},{"codigo":"5464","produto":"CREME LEITE PIRACANJUBA 200G TP","debito":2052.44,"credito":1781.46},{"codigo":"1594","produto":"FP BROA FUBA KG","debito":1934.86,"credito":0.0},{"codigo":"63635","produto":"LING CHURRASCO AURORA KG","debito":1917.03,"credito":1498.51},{"codigo":"8976","produto":"LING PERNIL LOPES FINA KG","debito":1804.84,"credito":0.0},{"codigo":"63655","produto":"LING CALABRESA AURORA KG","debito":1742.6,"credito":589.69},{"codigo":"548","produto":"FP PAO DE QUEIJO KG","debito":1702.14,"credito":0.0},{"codigo":"7271","produto":"LEITE COND PIRACANJUBA 395G TP","debito":1614.63,"credito":4150.37},{"codigo":"61148","produto":"LING TOSCANA REAL KG TRADICIONAL","debito":1456.84,"credito":479.52},{"codigo":"51427","produto":"SABAO PO OMO 700G CX LAVAGEM PERF","debito":1411.73,"credito":502.49},{"codigo":"45900","produto":"LING PERDIGAO 600G NA BRASA TOSC C/ PIMENTA","debito":1265.06,"credito":0.0},{"codigo":"9076","produto":"MOLHO TOMATE FUGINI 300GR SC TRADICIONAL","debito":1204.49,"credito":794.82},{"codigo":"45901","produto":"LING PERDIGAO 600G NA BRASA TOSC C/ QUEIJO","debito":1196.24,"credito":906.23},{"codigo":"3513","produto":"BOMBOM NESTLE 220G ESPECIALID CX","debito":1190.93,"credito":0.0},{"codigo":"64596","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":1027.39,"credito":766.25},{"codigo":"59991","produto":"SABAO PO TIXAN 2,2KG EMB ECONOMICA PRIMAVERA","debito":981.98,"credito":1516.83},{"codigo":"44487","produto":"SALSICHA COPACOL HOT DOG KG","debito":958.51,"credito":768.09}],"topCredito":[{"codigo":"7271.0","produto":"LEITE COND PIRACANJUBA 395G TP","debito":1614.63,"credito":4150.37},{"codigo":"5464.0","produto":"CREME LEITE PIRACANJUBA 200G TP","debito":2052.44,"credito":1781.46},{"codigo":"56197.0","produto":"PRESUNTO REAL KG","debito":399.36,"credito":1768.73},{"codigo":"59991.0","produto":"SABAO PO TIXAN 2,2KG EMB ECONOMICA PRIMAVERA","debito":981.98,"credito":1516.83},{"codigo":"63635.0","produto":"LING CHURRASCO AURORA KG","debito":1917.03,"credito":1498.51},{"codigo":"61328.0","produto":"61328.0","debito":0.0,"credito":1239.04},{"codigo":"2728.0","produto":"BISC RECH NIKITO 120G CHOC MORANGO","debito":724.74,"credito":1041.12},{"codigo":"9055.0","produto":"ACG LING TOSCANA SEARA KG","debito":253.02,"credito":933.59},{"codigo":"45901.0","produto":"LING PERDIGAO 600G NA BRASA TOSC C/ QUEIJO","debito":1196.24,"credito":906.23},{"codigo":"61447.0","produto":"61447.0","debito":0.0,"credito":879.83},{"codigo":"50960.0","produto":"SABAO PO OMO 1,6KG CX LAVAGEM PERF","debito":639.35,"credito":867.43},{"codigo":"33173.0","produto":"33173.0","debito":0.0,"credito":842.07},{"codigo":"60206.0","produto":"60206.0","debito":0.0,"credito":834.59},{"codigo":"9076.0","produto":"MOLHO TOMATE FUGINI 300GR SC TRADICIONAL","debito":1204.49,"credito":794.82},{"codigo":"44487.0","produto":"SALSICHA COPACOL HOT DOG KG","debito":958.51,"credito":768.09},{"codigo":"64596.0","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":1027.39,"credito":766.25},{"codigo":"63806.0","produto":"ACAI PIMPINELLA 1,15L TRADICIONAL","debito":157.7,"credito":738.05},{"codigo":"36891.0","produto":"BATATA UAI 2KG PALITO","debito":169.53,"credito":673.74},{"codigo":"41285.0","produto":"MOLHO HEINZ 240G SC TRAD","debito":414.17,"credito":671.33},{"codigo":"6991.0","produto":"MAIONESE HELLMANNS 500G ORIGINAL","debito":932.15,"credito":657.4}]},"2026-08":{"totalDebito":222667.04,"totalCredito":89067.15,"topDebito":[{"codigo":"10648","produto":"ROTISSERIE MARMITEX KG","debito":11364.58,"credito":0.0},{"codigo":"64667","produto":"FP PAO DE QUEIJO UN","debito":4634.97,"credito":0.0},{"codigo":"7271","produto":"LEITE COND PIRACANJUBA 395G TP","debito":2366.28,"credito":0.0},{"codigo":"10633","produto":"FP ROSCA KG","debito":2068.11,"credito":0.0},{"codigo":"1594","produto":"FP BROA FUBA KG","debito":1985.62,"credito":0.0},{"codigo":"61148","produto":"LING TOSCANA REAL KG TRADICIONAL","debito":1869.35,"credito":1288.71},{"codigo":"8976","produto":"LING PERNIL LOPES FINA KG","debito":1788.38,"credito":0.0},{"codigo":"14015","produto":"PRESUNTO REAL KG FAT","debito":1731.94,"credito":0.0},{"codigo":"5464","produto":"CREME LEITE PIRACANJUBA 200G TP","debito":1687.11,"credito":1226.64},{"codigo":"63655","produto":"LING CALABRESA AURORA KG","debito":1420.78,"credito":0.0},{"codigo":"548","produto":"FP PAO DE QUEIJO KG","debito":1374.49,"credito":0.0},{"codigo":"9055","produto":"ACG LING TOSCANA SEARA KG","debito":1353.06,"credito":294.82},{"codigo":"6991","produto":"MAIONESE HELLMANNS 500G ORIGINAL","debito":1196.06,"credito":525.93},{"codigo":"9076","produto":"MOLHO TOMATE FUGINI 300GR SC TRADICIONAL","debito":1124.72,"credito":524.69},{"codigo":"64596","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":990.14,"credito":547.01},{"codigo":"63635","produto":"LING CHURRASCO AURORA KG","debito":958.22,"credito":0.0},{"codigo":"51427","produto":"SABAO PO OMO 700G CX LAVAGEM PERF","debito":949.49,"credito":727.11},{"codigo":"59991","produto":"SABAO PO TIXAN 2,2KG EMB ECONOMICA PRIMAVERA","debito":896.99,"credito":336.0},{"codigo":"49545","produto":"FRALDINHA LOPES KG NA MANTEIGA","debito":882.66,"credito":0.0},{"codigo":"8971","produto":"LING TOSCANA LOPES KG","debito":881.86,"credito":0.0}],"topCredito":[{"codigo":"61148.0","produto":"LING TOSCANA REAL KG TRADICIONAL","debito":1869.35,"credito":1288.71},{"codigo":"5464.0","produto":"CREME LEITE PIRACANJUBA 200G TP","debito":1687.11,"credito":1226.64},{"codigo":"3513.0","produto":"BOMBOM NESTLE 220G ESPECIALID CX","debito":565.3,"credito":1026.68},{"codigo":"56197.0","produto":"PRESUNTO REAL KG","debito":245.68,"credito":1025.49},{"codigo":"61328.0","produto":"61328.0","debito":0.0,"credito":801.26},{"codigo":"51427.0","produto":"SABAO PO OMO 700G CX LAVAGEM PERF","debito":949.49,"credito":727.11},{"codigo":"3371.0","produto":"BOMBOM LACTA 250,6G FAVORITOS CX","debito":771.56,"credito":693.7},{"codigo":"6801.0","produto":"ESPONJA ACO BOMBRIL 45G","debito":609.38,"credito":678.1},{"codigo":"60206.0","produto":"60206.0","debito":0.0,"credito":590.67},{"codigo":"8572.0","produto":"PAO BISNAGUINHA PANCO 300G","debito":654.67,"credito":560.66},{"codigo":"64596.0","produto":"PAO DE QUEIJO DAIANA 1KG TRAD","debito":990.14,"credito":547.01},{"codigo":"6991.0","produto":"MAIONESE HELLMANNS 500G ORIGINAL","debito":1196.06,"credito":525.93},{"codigo":"9076.0","produto":"MOLHO TOMATE FUGINI 300GR SC TRADICIONAL","debito":1124.72,"credito":524.69},{"codigo":"10319.0","produto":"SACO LIXO JOGUE LIMPO 50L C/10 UN","debito":468.98,"credito":492.19},{"codigo":"8628.0","produto":"PAO PANCO 500G FORMA PREMIUM","debito":724.71,"credito":476.29},{"codigo":"8701.0","produto":"PAO FORMA PULLMAN 480GR","debito":706.53,"credito":445.09},{"codigo":"36891.0","produto":"BATATA UAI 2KG PALITO","debito":759.82,"credito":419.1},{"codigo":"13075.0","produto":"PRESUNTO SADIA KG","debito":30.15,"credito":381.05},{"codigo":"10281.0","produto":"SACO LIXO JOGUE LIMPO 100L C/5 UN","debito":407.23,"credito":379.4},{"codigo":"8924.0","produto":"LING PERNIL CAMARI 500G FINA","debito":610.51,"credito":358.2}]}};
+const PRODUTOS_ICMS_LOJA={};
+const PRODUTOS_PIS_LOJA={};
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const R=v=>typeof v==='number'?v:0;
 const BRL=v=>'R$ '+R(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2126,6 +2145,13 @@ function _serieICMSRecolherST(){
   selEl.value=prev;
   return {semST,st};
 }
+function _seriePISCOFINSRecolher(){
+  const selEl=document.getElementById('sel-periodo');
+  const prev=selEl.value;
+  const serie=PERIODOS.map(p=>{selEl.value=p;return _calcPISCOFINSRecolher();});
+  selEl.value=prev;
+  return serie;
+}
 
 // ── RESUMO IMPOSTOS (comparativo mês atual x mês anterior) ─────────────────────
 function _periodosResumo(){
@@ -2593,13 +2619,14 @@ function _groupedBarChart(id,seriesDefs,onBarClick){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
-function _serieBarChart(id,data,cor,onBarClick){
+function _serieBarChart(id,data,cor,onBarClick,borderColors){
   DC(id);
   const canvas=document.getElementById(id);
   if(!canvas||typeof Chart==='undefined')return;
   _CH[id]=new Chart(canvas,{
     type:'bar',
-    data:{labels:LABELS,datasets:[{data,backgroundColor:hexToRgba(cor,.75),borderRadius:4,maxBarThickness:34}]},
+    data:{labels:LABELS,datasets:[{data,backgroundColor:hexToRgba(cor,.75),borderRadius:4,maxBarThickness:34,
+      ...(borderColors?{borderColor:borderColors,borderWidth:2}:{})}]},
     options:{responsive:true,maintainAspectRatio:false,
       onClick:onBarClick?(evt,els)=>{if(els.length)onBarClick(els[0].index);}:undefined,
       onHover:onBarClick?(evt,els)=>{if(evt.native&&evt.native.target)evt.native.target.style.cursor=els.length?'pointer':'default';}:undefined,
@@ -2607,12 +2634,20 @@ function _serieBarChart(id,data,cor,onBarClick){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
-// Justificativa automática do ICMS a Recolher do mês, comparado ao mês anterior.
-function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
+// Borda de alerta (laranja) nos meses em que compras/faturamento fica fora da faixa saudável (65%-75%).
+function _ratioBorderColors(svBruta,cBruta){
+  return PERIODOS.map((_,i)=>{
+    if(!svBruta[i]||svBruta[i]<=0)return 'transparent';
+    const ratio=cBruta[i]/svBruta[i]*100;
+    return (ratio<65||ratio>75)?'#f5a623':'transparent';
+  });
+}
+// Justificativa automática do ICMS/PIS-Cofins a Recolher do mês, comparado ao mês anterior.
+function _justificativaImposto(i,svBruta,vTrib,cBruta,cTrib,nomeImposto){
   if(i===0)return ['Primeiro mês da série — sem mês anterior para comparar.'];
   const fat=_rvar(svBruta[i],svBruta[i-1]);
-  const pctTribCur=svBruta[i]>0?svTrib[i]/svBruta[i]*100:0;
-  const pctTribAnt=svBruta[i-1]>0?svTrib[i-1]/svBruta[i-1]*100:0;
+  const pctTribCur=svBruta[i]>0?vTrib[i]/svBruta[i]*100:0;
+  const pctTribAnt=svBruta[i-1]>0?vTrib[i-1]/svBruta[i-1]*100:0;
   const compras=_rvar(cBruta[i],cBruta[i-1]);
   const comprasTrib=_rvar(cTrib[i],cTrib[i-1]);
   const ratioCur=svBruta[i]>0?cBruta[i]/svBruta[i]*100:0;
@@ -2623,7 +2658,7 @@ function _justificativaICMS(i,svBruta,svTrib,cBruta,cTrib){
   if(Math.abs(dPct)>=0.5){
     l.push(`Vendas tributadas ficaram ${dPct>0?'mais':'menos'} representativas no faturamento `
       +`(${pctTribCur.toFixed(1)}% vs ${pctTribAnt.toFixed(1)}% no mês anterior), `
-      +`${dPct>0?'pressionando o débito de ICMS para cima':'aliviando o débito de ICMS'}.`);
+      +`${dPct>0?`pressionando o débito de ${nomeImposto} para cima`:`aliviando o débito de ${nomeImposto}`}.`);
   }
   l.push(`Compras ${_direcao(compras)} ${_fmtPctSigned(compras)} e compras tributadas ${_direcao(comprasTrib)} ${_fmtPctSigned(comprasTrib)}, `
     +`${comprasTrib.up?'ampliando':comprasTrib.down?'reduzindo':'sem alterar muito'} o crédito disponível no mês.`);
@@ -2647,17 +2682,16 @@ function _aprFecharPainel(painelId){
   if(painel){painel.style.display='none';painel.innerHTML='';}
   delete _aprAbertos[painelId];
 }
-function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
-  const painelId='apr-just-icms';
+function _renderJustificativaImposto(i,painelId,svBruta,vTrib,cBruta,cTrib,valorMes,nomeImposto,ocorrenciaChave){
   const painel=document.getElementById(painelId);
   if(!painel)return;
   if(_aprAbertos[painelId]===i){_aprFecharPainel(painelId);return;}
-  const frases=_justificativaICMS(i,svBruta,svTrib,cBruta,cTrib);
+  const frases=_justificativaImposto(i,svBruta,vTrib,cBruta,cTrib,nomeImposto);
   const per=PERIODOS[i];
-  const obs=OCORRENCIAS[per]?.icms;
+  const obs=OCORRENCIAS[per]?.[ocorrenciaChave];
   let html=`<div class="apr-just-hd">
       <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — por que esse valor?</div>
-      <div class="apr-just-val">ICMS a Recolher: ${BRL(valorMes)}</div>
+      <div class="apr-just-val">${nomeImposto} a Recolher: ${BRL(valorMes)}</div>
       <button class="apr-just-close" onclick="_aprFecharPainel('${painelId}')">✕</button>
     </div>
     <div class="apr-just-body">`
@@ -2668,42 +2702,95 @@ function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
   painel.style.display='';
   _aprAbertos[painelId]=i;
 }
+function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
+  _renderJustificativaImposto(i,'apr-just-icms',svBruta,svTrib,cBruta,cTrib,valorMes,'ICMS','icms');
+}
+function _renderJustificativaPIS(i,svBruta,pvTrib,cBruta,pcTrib,valorMes){
+  _renderJustificativaImposto(i,'apr-just-pis',svBruta,pvTrib,cBruta,pcTrib,valorMes,'PIS/Cofins','pis');
+}
 // Ranking de produtos com maior débito OU crédito de ICMS/PIS-Cofins no mês
 // (clique na barra Débito ou Crédito do gráfico "Produtos" troca o ranking).
-function _renderTopProdutos(i,painelId,dataObj,label,tipo){
+// Guarda os dados de Produtos (consolidado ou por loja, conforme o filtro atual) usados
+// na última renderização — permite que os botões de "Maiores valores/variações" dentro
+// do card já aberto redesenhem sem precisar refazer a leitura do filtro de empresa.
+let _aprDadosProdutosAtual={icms:null,pis:null};
+// Escolhe os dados de Produtos conforme o filtro de empresa: consolidado (Todas ou
+// nenhuma), por loja (exatamente uma selecionada) ou volta pro consolidado com um
+// aviso quando o filtro tem uma combinação de várias lojas (não pré-calculada).
+function _aprDadosProdutosPorFiltro(consolidado,porLoja){
+  const n=_selectedEmps.size;
+  if(n===0||n===LOJAS.length)return{dados:consolidado,nota:' · consolidado do grupo'};
+  if(n===1){
+    const loja=[..._selectedEmps][0];
+    const dadosLoja=porLoja[loja];
+    if(dadosLoja)return{dados:dadosLoja,nota:' · '+loja};
+    return{dados:consolidado,nota:' · sem dados de produto para '+loja+', mostrando todas as lojas'};
+  }
+  return{dados:consolidado,nota:' · filtro de várias lojas não suportado aqui, mostrando todas as lojas'};
+}
+function _renderTopProdutos(i,painelId,dataObj,label,tipo,modo,forcar){
   const painel=document.getElementById(painelId);
   if(!painel)return;
   tipo=tipo==='credito'?'credito':'debito';
-  const chaveAberta=i+':'+tipo;
-  if(_aprAbertos[painelId]===chaveAberta){_aprFecharPainel(painelId);return;}
+  modo=modo==='variacao'?'variacao':'valor';
+  const chaveAberta=i+':'+tipo+':'+modo;
+  if(!forcar&&_aprAbertos[painelId]===chaveAberta){_aprFecharPainel(painelId);return;}
   const per=PERIODOS[i];
   const info=dataObj[per];
-  const lista=info?(tipo==='credito'?info.topCredito:info.topDebito):null;
-  const totalPrincipal=info?(tipo==='credito'?info.totalCredito:info.totalDebito)||0:0;
   const tituloTipo=tipo==='credito'?'crédito':'débito';
+  const pills=`<div class="apr-just-modo">
+      <button class="apr-just-modo-btn${modo==='valor'?' active':''}" onclick="_aprProdutosToggleModo('${painelId}',${i},'${tipo}','valor')">Maiores valores</button>
+      <button class="apr-just-modo-btn${modo==='variacao'?' active':''}" onclick="_aprProdutosToggleModo('${painelId}',${i},'${tipo}','variacao')">Maiores variações</button>
+    </div>`;
   let html=`<div class="apr-just-hd">
       <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — produtos com maior ${tituloTipo} de ${label}</div>
       <button class="apr-just-close" onclick="_aprFecharPainel('${painelId}')">✕</button>
-    </div>`;
-  if(!lista||!lista.length){
-    html+='<div class="apr-just-body"><p>Sem dados de produtos para este mês.</p></div>';
+    </div>`+pills;
+
+  if(modo==='valor'){
+    const lista=info?(tipo==='credito'?info.topCredito:info.topDebito):null;
+    const totalPrincipal=info?(tipo==='credito'?info.totalCredito:info.totalDebito)||0:0;
+    if(!lista||!lista.length){
+      html+='<div class="apr-just-body"><p>Sem dados de produtos para este mês.</p></div>';
+    }else{
+      const colPrincipal=tipo==='credito'?'Crédito':'Débito';
+      const colSecundaria=tipo==='credito'?'Débito (vendas)':'Crédito (compras)';
+      html+=`<div class="tscroll"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colPrincipal}</th><th class="r">% do ${tituloTipo}</th><th class="r">${colSecundaria}</th></tr></thead><tbody>`
+        + lista.map(p=>{
+            const valorPrincipal=tipo==='credito'?p.credito:p.debito;
+            const valorSecundario=tipo==='credito'?p.debito:p.credito;
+            const pct=totalPrincipal>0?(valorPrincipal/totalPrincipal*100).toFixed(1)+'%':'—';
+            const semTxt=tipo==='credito'?'sem débito no mês':'sem crédito no mês';
+            const secTxt=valorSecundario>0.005?BRL(valorSecundario):`<span class="apr-pct">${semTxt}</span>`;
+            return `<tr><td>${p.codigo||'—'}</td><td>${p.produto}</td><td class="r">${BRL(valorPrincipal)}</td><td class="r">${pct}</td><td class="r">${secTxt}</td></tr>`;
+          }).join('')
+        + '</tbody></table></div>';
+    }
   }else{
-    const colPrincipal=tipo==='credito'?'Crédito':'Débito';
-    const colSecundaria=tipo==='credito'?'Débito (vendas)':'Crédito (compras)';
-    html+=`<div class="tscroll"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colPrincipal}</th><th class="r">% do ${tituloTipo}</th><th class="r">${colSecundaria}</th></tr></thead><tbody>`
-      + lista.map(p=>{
-          const valorPrincipal=tipo==='credito'?p.credito:p.debito;
-          const valorSecundario=tipo==='credito'?p.debito:p.credito;
-          const pct=totalPrincipal>0?(valorPrincipal/totalPrincipal*100).toFixed(1)+'%':'—';
-          const semTxt=tipo==='credito'?'sem débito no mês':'sem crédito no mês';
-          const secTxt=valorSecundario>0.005?BRL(valorSecundario):`<span class="apr-pct">${semTxt}</span>`;
-          return `<tr><td>${p.codigo||'—'}</td><td>${p.produto}</td><td class="r">${BRL(valorPrincipal)}</td><td class="r">${pct}</td><td class="r">${secTxt}</td></tr>`;
-        }).join('')
-      + '</tbody></table></div>';
+    const lista=info&&info.variacao?(tipo==='credito'?info.variacao.topCredito:info.variacao.topDebito):null;
+    if(!lista||!lista.length){
+      html+='<div class="apr-just-body"><p>Sem mês anterior disponível para comparar, ou nenhum produto com variação relevante.</p></div>';
+    }else{
+      html+=`<div class="tscroll"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">Mês atual</th><th class="r">Mês anterior</th><th class="r">Variação</th></tr></thead><tbody>`
+        + lista.map(p=>{
+            const v=_rvar(p.atual,p.anterior,tipo==='debito');
+            return `<tr><td>${p.codigo||'—'}</td><td>${p.produto}</td><td class="r">${BRL(p.atual)}</td><td class="r">${BRL(p.anterior)}</td>`
+              +`<td class="r ${v.cls}">${v.arrow} ${BRL(Math.abs(p.variacao))}</td></tr>`;
+          }).join('')
+        + '</tbody></table></div>';
+    }
   }
   painel.innerHTML=html;
   painel.style.display='';
   _aprAbertos[painelId]=chaveAberta;
+}
+function _aprProdutosToggleModo(painelId,i,tipo,modo){
+  const cfg={
+    'apr-just-produtos-icms':{obj:_aprDadosProdutosAtual.icms,label:'ICMS'},
+    'apr-just-produtos-pis':{obj:_aprDadosProdutosAtual.pis,label:'PIS/Cofins'},
+  }[painelId];
+  if(!cfg||!cfg.obj)return;
+  _renderTopProdutos(i,painelId,cfg.obj,cfg.label,tipo,modo,true);
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2802,8 +2889,8 @@ function renderApresentacao(){
 
   const serRec=_serieICMSRecolherST();
   const icmsRecTotal=PERIODOS.map((_,i)=>serRec.semST[i]+serRec.st[i]);
-  ['apr-just-icms','apr-just-produtos-icms','apr-just-produtos-pis'].forEach(_aprFecharPainel);
-  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,serRec.semST[i]));
+  ['apr-just-icms','apr-just-pis','apr-just-produtos-icms','apr-just-produtos-pis'].forEach(_aprFecharPainel);
+  _serieBarChart('apr-ch-icms-recolher',serRec.semST,'#ef5350',i=>_renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,serRec.semST[i]),_ratioBorderColors(svBruta,cBruta));
   _serieBarChart('apr-ch-icms-st',serRec.st,'#ab47bc');
   _aprTabelaComTotal('apr-tb-icms-recolher',[
     {label:'ICMS a Recolher',data:serRec.semST,pctBase:svBruta,pctSuffix:'do fat.'},
@@ -2813,10 +2900,13 @@ function renderApresentacao(){
   _aprGrupo('apr-mini-icms-deb','apr-tb-icms-deb',APR_ICMS_DEB,'total_deb_icms');
   _aprGrupo('apr-mini-icms-cred','apr-tb-icms-cred',APR_ICMS_CRED,'total_cred_icms');
 
+  const escopoIcms=_aprDadosProdutosPorFiltro(PRODUTOS_ICMS,PRODUTOS_ICMS_LOJA);
+  _aprDadosProdutosAtual.icms=escopoIcms.dados;
+  set('apr-produtos-icms-escopo',escopoIcms.nota);
   _groupedBarChart('apr-ch-produtos-icms',[
-    {label:'Débito',data:PERIODOS.map(p=>PRODUTOS_ICMS[p]?.totalDebito||0),cor:'#ef5350'},
-    {label:'Crédito',data:PERIODOS.map(p=>PRODUTOS_ICMS[p]?.totalCredito||0),cor:'#42a5f5'},
-  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-icms',PRODUTOS_ICMS,'ICMS',dsIdx===1?'credito':'debito'));
+    {label:'Débito',data:PERIODOS.map(p=>escopoIcms.dados[p]?.totalDebito||0),cor:'#ef5350'},
+    {label:'Crédito',data:PERIODOS.map(p=>escopoIcms.dados[p]?.totalCredito||0),cor:'#42a5f5'},
+  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-icms',escopoIcms.dados,'ICMS',dsIdx===1?'credito':'debito'));
 
   // ── PIS/Cofins ──
   const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
@@ -2830,6 +2920,12 @@ function renderApresentacao(){
   _aprTabelaComTotal('apr-tb-pis-compras',[
     {label:'Compras Tributadas PIS/Cofins',data:pcTrib,pctBase:cBruta},{label:'Compras Alíquota Zero',data:pcZero,pctBase:cBruta},
   ],'COMPRAS BRUTO',cBruta,svBruta,'do fat.');
+
+  const seriePis=_seriePISCOFINSRecolher();
+  _serieBarChart('apr-ch-pis-recolher',seriePis,'#ef5350',i=>_renderJustificativaPIS(i,svBruta,pvTrib,cBruta,pcTrib,seriePis[i]),_ratioBorderColors(svBruta,cBruta));
+  setH('apr-tb-pis-recolher',_aprMesesHeader()+'<tbody>'
+    +_aprLinhaComPct('PIS/Cofins a Recolher',seriePis,svBruta,'do fat.',' style="font-weight:700;background:var(--surface2)"')
+    +'</tbody>');
 
   _aprGrupo('apr-mini-pis-deb','apr-tb-pis-deb',APR_PIS_DEB,'total_deb_pis');
   const rowsPisCred=_aprGrupo('apr-mini-pis-cred',null,APR_PIS_CRED,'total_cred_pis');
@@ -2849,10 +2945,13 @@ function renderApresentacao(){
     [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado *',data:naoAprov}],
     'TOTAL', getSerie('total_cred_pis'));
 
+  const escopoPis=_aprDadosProdutosPorFiltro(PRODUTOS_PIS,PRODUTOS_PIS_LOJA);
+  _aprDadosProdutosAtual.pis=escopoPis.dados;
+  set('apr-produtos-pis-escopo',escopoPis.nota);
   _groupedBarChart('apr-ch-produtos-pis',[
-    {label:'Débito',data:PERIODOS.map(p=>PRODUTOS_PIS[p]?.totalDebito||0),cor:'#ef5350'},
-    {label:'Crédito',data:PERIODOS.map(p=>PRODUTOS_PIS[p]?.totalCredito||0),cor:'#42a5f5'},
-  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-pis',PRODUTOS_PIS,'PIS/Cofins',dsIdx===1?'credito':'debito'));
+    {label:'Débito',data:PERIODOS.map(p=>escopoPis.dados[p]?.totalDebito||0),cor:'#ef5350'},
+    {label:'Crédito',data:PERIODOS.map(p=>escopoPis.dados[p]?.totalCredito||0),cor:'#42a5f5'},
+  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-pis',escopoPis.dados,'PIS/Cofins',dsIdx===1?'credito':'debito'));
 }
 function capturarApresentacao(){_capturarPrint('apresentacao-capture','apr-print-btn','apr-periodo-label','Apresentacao_Impostos');}
 
