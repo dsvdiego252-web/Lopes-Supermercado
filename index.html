@@ -1195,7 +1195,7 @@ tfoot td{
       <div class="apr-section">
         <div class="apr-section-hd">
           <div class="apr-section-title">🏆 Produtos</div>
-          <div class="apr-section-sub">débito de ICMS nas vendas, por produto · consolidado do grupo, sem quebra por loja · clique no mês para ver o ranking</div>
+          <div class="apr-section-sub">débito e crédito de ICMS por produto · consolidado do grupo, sem quebra por loja · clique na barra (débito ou crédito) para ver o ranking do mês</div>
         </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-icms"></canvas></div></div>
         <div id="apr-just-produtos-icms" class="apr-just-card" style="display:none"></div>
@@ -1237,7 +1237,7 @@ tfoot td{
       <div class="apr-section">
         <div class="apr-section-hd">
           <div class="apr-section-title">🏆 Produtos</div>
-          <div class="apr-section-sub">débito de PIS/Cofins nas vendas, por produto · consolidado do grupo, sem quebra por loja · clique no mês para ver o ranking</div>
+          <div class="apr-section-sub">débito e crédito de PIS/Cofins por produto · consolidado do grupo, sem quebra por loja · clique na barra (débito ou crédito) para ver o ranking do mês</div>
         </div>
         <div class="chart-card" style="padding:14px 16px"><div style="height:190px;position:relative"><canvas id="apr-ch-produtos-pis"></canvas></div></div>
         <div id="apr-just-produtos-pis" class="apr-just-card" style="display:none"></div>
@@ -2574,7 +2574,7 @@ function _totalComLinhasChart(id,totalData,totalLabel,linhas){
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
   });
 }
-function _groupedBarChart(id,seriesDefs){
+function _groupedBarChart(id,seriesDefs,onBarClick){
   DC(id);
   const canvas=document.getElementById(id);
   if(!canvas||typeof Chart==='undefined')return;
@@ -2583,6 +2583,11 @@ function _groupedBarChart(id,seriesDefs){
     data:{labels:LABELS,datasets:seriesDefs.map(s=>({label:s.label,data:s.data,backgroundColor:s.cor,borderRadius:4,maxBarThickness:18}))},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
+      onClick:onBarClick?(evt,_els,chart)=>{
+        const pontos=chart.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+        if(pontos.length)onBarClick(pontos[0].index,pontos[0].datasetIndex);
+      }:undefined,
+      onHover:onBarClick?(evt)=>{if(evt.native&&evt.native.target)evt.native.target.style.cursor='pointer';}:undefined,
       plugins:{legend:{position:'bottom',labels:{color:'#56607c',font:{family:'JetBrains Mono',size:10},boxWidth:9,padding:8}},
         tooltip:{...TTP}},
       scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}}
@@ -2663,32 +2668,42 @@ function _renderJustificativaICMS(i,svBruta,svTrib,cBruta,cTrib,valorMes){
   painel.style.display='';
   _aprAbertos[painelId]=i;
 }
-// Ranking de produtos com maior débito de ICMS/PIS-Cofins no mês (clique no gráfico "Produtos").
-function _renderTopProdutos(i,painelId,dataObj,label){
+// Ranking de produtos com maior débito OU crédito de ICMS/PIS-Cofins no mês
+// (clique na barra Débito ou Crédito do gráfico "Produtos" troca o ranking).
+function _renderTopProdutos(i,painelId,dataObj,label,tipo){
   const painel=document.getElementById(painelId);
   if(!painel)return;
-  if(_aprAbertos[painelId]===i){_aprFecharPainel(painelId);return;}
+  tipo=tipo==='credito'?'credito':'debito';
+  const chaveAberta=i+':'+tipo;
+  if(_aprAbertos[painelId]===chaveAberta){_aprFecharPainel(painelId);return;}
   const per=PERIODOS[i];
   const info=dataObj[per];
+  const lista=info?(tipo==='credito'?info.topCredito:info.topDebito):null;
+  const totalPrincipal=info?(tipo==='credito'?info.totalCredito:info.totalDebito)||0:0;
+  const tituloTipo=tipo==='credito'?'crédito':'débito';
   let html=`<div class="apr-just-hd">
-      <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — produtos com maior débito de ${label}</div>
+      <div class="apr-just-mes">${LABELS[i]}/${per.split('-')[0]} — produtos com maior ${tituloTipo} de ${label}</div>
       <button class="apr-just-close" onclick="_aprFecharPainel('${painelId}')">✕</button>
     </div>`;
-  if(!info||!info.top||!info.top.length){
+  if(!lista||!lista.length){
     html+='<div class="apr-just-body"><p>Sem dados de produtos para este mês.</p></div>';
   }else{
-    const total=info.total||0;
-    html+='<div class="tscroll"><table><thead><tr><th>Produto</th><th class="r">Débito</th><th class="r">% do débito</th><th class="r">Crédito (compras)</th></tr></thead><tbody>'
-      + info.top.map(p=>{
-          const pct=total>0?(p.debito/total*100).toFixed(1)+'%':'—';
-          const credTxt=p.credito>0.005?BRL(p.credito):'<span class="apr-pct">sem crédito no mês</span>';
-          return `<tr><td>${p.produto}</td><td class="r">${BRL(p.debito)}</td><td class="r">${pct}</td><td class="r">${credTxt}</td></tr>`;
+    const colPrincipal=tipo==='credito'?'Crédito':'Débito';
+    const colSecundaria=tipo==='credito'?'Débito (vendas)':'Crédito (compras)';
+    html+=`<div class="tscroll"><table><thead><tr><th>Produto</th><th class="r">${colPrincipal}</th><th class="r">% do ${tituloTipo}</th><th class="r">${colSecundaria}</th></tr></thead><tbody>`
+      + lista.map(p=>{
+          const valorPrincipal=tipo==='credito'?p.credito:p.debito;
+          const valorSecundario=tipo==='credito'?p.debito:p.credito;
+          const pct=totalPrincipal>0?(valorPrincipal/totalPrincipal*100).toFixed(1)+'%':'—';
+          const semTxt=tipo==='credito'?'sem débito no mês':'sem crédito no mês';
+          const secTxt=valorSecundario>0.005?BRL(valorSecundario):`<span class="apr-pct">${semTxt}</span>`;
+          return `<tr><td>${p.produto}</td><td class="r">${BRL(valorPrincipal)}</td><td class="r">${pct}</td><td class="r">${secTxt}</td></tr>`;
         }).join('')
       + '</tbody></table></div>';
   }
   painel.innerHTML=html;
   painel.style.display='';
-  _aprAbertos[painelId]=i;
+  _aprAbertos[painelId]=chaveAberta;
 }
 function _aprMesesHeader(){
   return '<thead><tr><th>Categoria</th>'+PERIODOS.map((p,i)=>`<th class="r">${LABELS[i]}/${p.split('-')[0]}</th>`).join('')+'</tr></thead>';
@@ -2798,8 +2813,10 @@ function renderApresentacao(){
   _aprGrupo('apr-mini-icms-deb','apr-tb-icms-deb',APR_ICMS_DEB,'total_deb_icms');
   _aprGrupo('apr-mini-icms-cred','apr-tb-icms-cred',APR_ICMS_CRED,'total_cred_icms');
 
-  _serieBarChart('apr-ch-produtos-icms',PERIODOS.map(p=>PRODUTOS_ICMS[p]?.total||0),'#ef5350',
-    i=>_renderTopProdutos(i,'apr-just-produtos-icms',PRODUTOS_ICMS,'ICMS'));
+  _groupedBarChart('apr-ch-produtos-icms',[
+    {label:'Débito',data:PERIODOS.map(p=>PRODUTOS_ICMS[p]?.totalDebito||0),cor:'#ef5350'},
+    {label:'Crédito',data:PERIODOS.map(p=>PRODUTOS_ICMS[p]?.totalCredito||0),cor:'#42a5f5'},
+  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-icms',PRODUTOS_ICMS,'ICMS',dsIdx===1?'credito':'debito'));
 
   // ── PIS/Cofins ──
   const pvTrib=getSerie('venda_trib_pis'),pvZero=getSerie('venda_aliq_zero');
@@ -2832,8 +2849,10 @@ function renderApresentacao(){
     [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado *',data:naoAprov}],
     'TOTAL', getSerie('total_cred_pis'));
 
-  _serieBarChart('apr-ch-produtos-pis',PERIODOS.map(p=>PRODUTOS_PIS[p]?.total||0),'#ef5350',
-    i=>_renderTopProdutos(i,'apr-just-produtos-pis',PRODUTOS_PIS,'PIS/Cofins'));
+  _groupedBarChart('apr-ch-produtos-pis',[
+    {label:'Débito',data:PERIODOS.map(p=>PRODUTOS_PIS[p]?.totalDebito||0),cor:'#ef5350'},
+    {label:'Crédito',data:PERIODOS.map(p=>PRODUTOS_PIS[p]?.totalCredito||0),cor:'#42a5f5'},
+  ],(i,dsIdx)=>_renderTopProdutos(i,'apr-just-produtos-pis',PRODUTOS_PIS,'PIS/Cofins',dsIdx===1?'credito':'debito'));
 }
 function capturarApresentacao(){_capturarPrint('apresentacao-capture','apr-print-btn','apr-periodo-label','Apresentacao_Impostos');}
 
