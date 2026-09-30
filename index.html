@@ -1236,7 +1236,7 @@ tfoot td{
         <div id="apr-detalhe-pis-cred" style="display:none;margin-top:14px">
           <div class="apr-section-sub" style="margin-bottom:8px">Créditos de PIS/Cofins — todos os componentes, separados</div>
           <div class="apr-mini-grid" id="apr-mini-pis-cred"></div>
-          <div class="apr-note">* Crédito Não Aproveitado não entra na soma do total — é crédito que a empresa não pôde usar.</div>
+          <div class="apr-note">* Crédito Não Aproveitado é referente às Compras MEI (9,25% sobre o valor da compra — PIS 1,65% + Cofins 7,6% — que seria o crédito normal, mas o MEI não gera esse crédito pro comprador). Não entra na soma do total, pois é crédito que a empresa não pôde usar.</div>
           <div class="tcard" style="margin-top:10px"><div class="tscroll"><table id="apr-tb-pis-cred"></table></div></div>
         </div>
       </div>
@@ -2997,7 +2997,7 @@ function renderApresentacao(){
   const gridPisCred=document.getElementById('apr-mini-pis-cred');
   if(gridPisCred){
     gridPisCred.insertAdjacentHTML('beforeend',`<div class="apr-mini-card" style="--mc:#56607c">
-      <div class="apr-mini-lbl">Crédito Não Aproveitado *</div>
+      <div class="apr-mini-lbl">Crédito Não Aproveitado (MEI) *</div>
       <div class="apr-mini-val">${BRL(naoAprov.reduce((a,b)=>a+b,0))}</div>
       <div class="apr-mini-sub">total no período</div>
       <div class="apr-mini-chart-wrap"><canvas id="apr-mc-pis-naoaprov"></canvas></div>
@@ -3005,7 +3005,7 @@ function renderApresentacao(){
     _miniBarChart('apr-mc-pis-naoaprov',naoAprov,'#56607c');
   }
   _aprTabelaComTotal('apr-tb-pis-cred',
-    [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado *',data:naoAprov}],
+    [...rowsPisCred.map(r=>({label:r.label,data:r.data})),{label:'Crédito Não Aproveitado (MEI) *',data:naoAprov}],
     'TOTAL', getSerie('total_cred_pis'));
 
   const escopoPis=_aprDadosProdutosPorFiltro(PRODUTOS_PIS,PRODUTOS_PIS_LOJA);
