@@ -2808,7 +2808,7 @@ function _renderTopProdutos(i,painelId,dataObj,label,tipo,modo,forcar){
   const tituloTodos=tipo==='credito'?'Todos os produtos de compra':'Todas as vendas';
   const colValor=tipo==='credito'?'Valor de Compra':'Valor de Venda';
   modo=modo==='variacao'?'variacao':(modo==='todos'&&temTodosLista?'todos':'valor');
-  const chaveAberta=i+':'+tipo+':'+modo+(modo==='todos'?':'+(_aprFiltroListaAtual[painelId]||'todos'):'');
+  const chaveAberta=i+':'+tipo+':'+modo+(modo==='todos'?':'+(_aprFiltroListaAtual[painelId]||'todos')+':'+(_aprOrdemListaAtual[painelId]||'valor'):'');
   if(!forcar&&_aprAbertos[painelId]===chaveAberta){_aprFecharPainel(painelId);return;}
   const per=PERIODOS[i];
   const info=dataObj[per];
@@ -2832,11 +2832,20 @@ function _renderTopProdutos(i,painelId,dataObj,label,tipo,modo,forcar){
       // (crédito ou débito) — usado só pra classificar tributado/alíquota zero, não exibido].
       const trib=todos.filter(p=>p[4]>0.005),zero=todos.filter(p=>p[4]<=0.005);
       const filtro=_aprFiltroListaAtual[painelId]||'todos';
-      const filtrados=filtro==='tributados'?trib:(filtro==='zero'?zero:todos);
+      const filtrados=(filtro==='tributados'?trib:(filtro==='zero'?zero:todos)).slice();
+      const ordem=_aprOrdemListaAtual[painelId]||'valor';
+      if(ordem==='alta')filtrados.sort((a,b)=>(b[2]-b[3])-(a[2]-a[3]));
+      else if(ordem==='queda')filtrados.sort((a,b)=>(a[2]-a[3])-(b[2]-b[3]));
+      else filtrados.sort((a,b)=>b[2]-a[2]);
       html+=`<div class="apr-just-modo" style="margin-top:4px">
           <button class="apr-just-modo-btn${filtro==='todos'?' active':''}" onclick="_aprFiltrarTodosLista('${painelId}',${i},'${tipo}','todos')">Todos (${todos.length})</button>
           <button class="apr-just-modo-btn${filtro==='tributados'?' active':''}" onclick="_aprFiltrarTodosLista('${painelId}',${i},'${tipo}','tributados')">Tributados (${trib.length})</button>
           <button class="apr-just-modo-btn${filtro==='zero'?' active':''}" onclick="_aprFiltrarTodosLista('${painelId}',${i},'${tipo}','zero')">Alíquota Zero (${zero.length})</button>
+        </div>
+        <div class="apr-just-modo" style="margin-top:4px">
+          <button class="apr-just-modo-btn${ordem==='valor'?' active':''}" onclick="_aprOrdenarTodosLista('${painelId}',${i},'${tipo}','valor')">Maior valor</button>
+          <button class="apr-just-modo-btn${ordem==='alta'?' active':''}" onclick="_aprOrdenarTodosLista('${painelId}',${i},'${tipo}','alta')">Maior alta (variação)</button>
+          <button class="apr-just-modo-btn${ordem==='queda'?' active':''}" onclick="_aprOrdenarTodosLista('${painelId}',${i},'${tipo}','queda')">Maior queda (variação)</button>
         </div>`;
       if(!filtrados.length){
         html+='<div class="apr-just-body"><p>Nenhum produto neste filtro.</p></div>';
@@ -2901,6 +2910,17 @@ function _aprProdutosToggleModo(painelId,i,tipo,modo){
 let _aprFiltroListaAtual={};
 function _aprFiltrarTodosLista(painelId,i,tipo,filtro){
   _aprFiltroListaAtual[painelId]=filtro;
+  const cfg={
+    'apr-just-produtos-pis':{obj:_aprDadosProdutosAtual.pis,label:'PIS/Cofins'},
+  }[painelId];
+  if(!cfg||!cfg.obj)return;
+  _renderTopProdutos(i,painelId,cfg.obj,cfg.label,tipo,'todos',true);
+}
+// Ordenação (Maior valor / Maior alta / Maior queda, por variação vs. mês anterior)
+// da lista "Todos" — guarda a escolha por painel igual ao filtro acima.
+let _aprOrdemListaAtual={};
+function _aprOrdenarTodosLista(painelId,i,tipo,ordem){
+  _aprOrdemListaAtual[painelId]=ordem;
   const cfg={
     'apr-just-produtos-pis':{obj:_aprDadosProdutosAtual.pis,label:'PIS/Cofins'},
   }[painelId];
