@@ -2841,7 +2841,7 @@ function _renderTopProdutos(i,painelId,dataObj,label,tipo,modo,forcar){
       if(!filtrados.length){
         html+='<div class="apr-just-body"><p>Nenhum produto neste filtro.</p></div>';
       }else{
-        html+=`<div class="tscroll"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colValor} (mês atual)</th><th class="r">${colValor} (mês anterior)</th><th class="r">Variação</th></tr></thead><tbody>`
+        html+=`<div class="tscroll" style="max-height:420px;overflow-y:auto"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colValor} (mês atual)</th><th class="r">${colValor} (mês anterior)</th><th class="r">Variação</th></tr></thead><tbody>`
           + filtrados.map(p=>{
               const v=_rvar(p[2],p[3],false);
               return `<tr><td>${p[0]}</td><td>${p[1]}</td><td class="r">${BRL(p[2])}</td><td class="r">${BRL(p[3])}</td>`
