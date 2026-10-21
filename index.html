@@ -2850,13 +2850,17 @@ function _renderTopProdutos(i,painelId,dataObj,label,tipo,modo,forcar){
       if(!filtrados.length){
         html+='<div class="apr-just-body"><p>Nenhum produto neste filtro.</p></div>';
       }else{
+        const totAtual=filtrados.reduce((s,p)=>s+p[2],0),totAnterior=filtrados.reduce((s,p)=>s+p[3],0);
+        const totVar=_rvar(totAtual,totAnterior,false);
         html+=`<div class="tscroll" style="max-height:420px;overflow-y:auto"><table><thead><tr><th>Código</th><th>Produto</th><th class="r">${colValor} (mês atual)</th><th class="r">${colValor} (mês anterior)</th><th class="r">Variação</th></tr></thead><tbody>`
           + filtrados.map(p=>{
               const v=_rvar(p[2],p[3],false);
               return `<tr><td>${p[0]}</td><td>${p[1]}</td><td class="r">${BRL(p[2])}</td><td class="r">${BRL(p[3])}</td>`
                 +`<td class="r ${v.cls}">${v.arrow} ${BRL(Math.abs(p[2]-p[3]))}</td></tr>`;
             }).join('')
-          + '</tbody></table></div>';
+          + `</tbody><tfoot><tr style="font-weight:700;background:var(--surface2)"><td colspan="2">TOTAL (${filtrados.length} produto${filtrados.length===1?'':'s'})</td>`
+          + `<td class="r">${BRL(totAtual)}</td><td class="r">${BRL(totAnterior)}</td>`
+          + `<td class="r ${totVar.cls}">${totVar.arrow} ${BRL(Math.abs(totAtual-totAnterior))}</td></tr></tfoot></table></div>`;
       }
     }
   }else if(modo==='valor'){
