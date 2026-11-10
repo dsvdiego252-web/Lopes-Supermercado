@@ -2356,9 +2356,9 @@ function _aprCombinarFornecedoresSM(per){
 }
 // Soma os produtos comprados de cada fornecedor da lista acima num ranking único.
 function _aprProdutosDeFornecedoresSM(lista){
-  const mapa={};
-  lista.forEach(f=>(f.produtos||[]).forEach(p=>{mapa[p.produto]=(mapa[p.produto]||0)+p.valor;}));
-  return Object.entries(mapa).map(([produto,valor])=>({produto,valor})).sort((a,b)=>b.valor-a.valor);
+  const linhas=[];
+  lista.forEach(f=>(f.produtos||[]).forEach(p=>{linhas.push({fornecedor:f.nome,produto:p.produto,valor:p.valor});}));
+  return linhas.sort((a,b)=>b.valor-a.valor);
 }
 // Desenha um título + tabela simples no PDF, paginando quando necessário. Retorna o novo y.
 function _pdfTabelaSM(doc,margin,y,pageW,pageH,titulo,cols,colW,rows,nota){
@@ -2510,7 +2510,7 @@ function gerarPdfSimplesMei(){
     const colPW=[pageW-margin*2-90,90];
     y=_pdfTabelaSM(doc,margin,y,pageW,pageH,'Valores por Produto — '+mesLbl,
       ['Produto','Valor'],colPW,
-      prod.map(p=>[p.produto,BRL(p.valor)]),
+      prod.map(p=>[p.fornecedor+' — '+p.produto,BRL(p.valor)]),
       null);
 
     const perArq=mesLbl.replace(/[^a-zA-Z0-9]+/g,'_');
