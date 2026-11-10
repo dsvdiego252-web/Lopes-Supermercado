@@ -2401,6 +2401,64 @@ function _pdfTabelaSM(doc,margin,y,pageW,pageH,titulo,cols,colW,rows,nota){
 }
 // Gera um PDF com os gráficos totais de Compras/ICMS Não Creditado (Simples Nacional
 // & MEI) e, do último mês disponível, os valores por fornecedor e depois por produto.
+// Preenche o canvas de branco antes do desenho (exportado como JPEG, sem transparência).
+const PDF_WHITE_BG_PLUGIN={
+  id:'pdfWhiteBg',
+  beforeDraw(chart){
+    const{ctx}=chart;
+    ctx.save();
+    ctx.fillStyle='#fff';
+    ctx.fillRect(0,0,chart.width,chart.height);
+    ctx.restore();
+  }
+};
+// Rótulos nas barras, em tom escuro (o gráfico do PDF vai sobre fundo branco).
+const PDF_BAR_LABELS_PLUGIN={
+  id:'pdfBarLabels',
+  afterDatasetsDraw(chart){
+    const{ctx}=chart;
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden)return;
+      meta.data.forEach((bar,i)=>{
+        const val=ds.data[i];
+        if(!val)return;
+        ctx.save();
+        ctx.fillStyle='#333';
+        ctx.font='bold 11px Helvetica, Arial, sans-serif';
+        ctx.textAlign='center';
+        ctx.textBaseline='bottom';
+        const txt='R$'+(val>=1000000?(val/1000000).toFixed(1)+'M':(val/1000).toFixed(0)+'k');
+        ctx.fillText(txt,bar.x,bar.y-3);
+        ctx.restore();
+      });
+    });
+  }
+};
+// Renderiza, num canvas fora da tela, um gráfico de barras agrupadas (Simples Nacional
+// x MEI) com os valores escritos sobre as barras — usado só para a imagem do PDF.
+function _pdfChartImageSM(seriesDefs){
+  if(typeof Chart==='undefined')return null;
+  const canvas=document.createElement('canvas');
+  canvas.width=1100;canvas.height=480;
+  const chart=new Chart(canvas,{
+    type:'bar',
+    data:{labels:LABELS,datasets:seriesDefs.map(s=>({label:s.label,data:s.data,backgroundColor:s.cor,borderRadius:4,maxBarThickness:46}))},
+    options:{responsive:false,animation:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#333',font:{family:'Helvetica',size:15},boxWidth:13,padding:12}},
+        tooltip:{enabled:false}},
+      layout:{padding:{top:24}},
+      scales:{
+        x:{grid:{color:'#e3e3e3'},ticks:{color:'#333',font:{family:'Helvetica',size:13}}},
+        y:{grid:{color:'#e3e3e3'},ticks:{color:'#333',font:{family:'Helvetica',size:13},
+          callback:v=>'R$'+(v>=1000000?(v/1000000).toFixed(1)+'M':(v/1000).toFixed(0)+'k')}}}
+    },
+    plugins:[PDF_WHITE_BG_PLUGIN,PDF_BAR_LABELS_PLUGIN]
+  });
+  const img=chart.toBase64Image('image/jpeg',.92);
+  chart.destroy();
+  return img;
+}
 function gerarPdfSimplesMei(){
   const btn=document.getElementById('apr-sm-pdf-btn');
   if(typeof window.jspdf==='undefined'){
@@ -2419,27 +2477,26 @@ function gerarPdfSimplesMei(){
     const pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight();
     const margin=40;
     let y=margin;
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(20);
-    doc.text('Lopes Supermercado',margin,y);y+=20;
-    doc.setFontSize(13);
+    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(20);
     doc.text('Compras Simples Nacional & MEI',margin,y);y+=16;
     doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(100);
     doc.text('Gráficos: consolidado do grupo, '+LABELS[0]+'/'+PERIODOS[0].split('-')[0]+' a '+mesLbl+'  ·  Tabelas: '+mesLbl,margin,y);
     doc.setTextColor(20);
-    y+=22;
+    y+=20;
 
-    const chCompras=typeof _CH!=='undefined'?_CH['apr-ch-icms-simplesmei']:null;
-    const chNc=typeof _CH!=='undefined'?_CH['apr-ch-icms-naocred']:null;
-    const imgW=(pageW-margin*2-16)/2,imgH=imgW*0.62;
+    const smSimples=getSerieSM('compras_simples'),smMei=getSerieSM('compras_mei');
+    const smNcSimples=getSerieSM('icms_nao_cred_simples'),smNcMei=getSerieSM('icms_nao_cred_mei');
+    const imgW=pageW-margin*2,imgH=imgW*0.44;
     doc.setFontSize(10);doc.setFont('helvetica','bold');
-    if(chCompras){
-      doc.text('Compras',margin,y);
-      doc.addImage(chCompras.toBase64Image(),'PNG',margin,y+6,imgW,imgH);
-    }
-    if(chNc){
-      doc.text('ICMS Não Creditado',margin+imgW+16,y);
-      doc.addImage(chNc.toBase64Image(),'PNG',margin+imgW+16,y+6,imgW,imgH);
-    }
+    doc.text('Compras',margin,y);
+    const imgCompras=_pdfChartImageSM([{label:'Simples Nacional',data:smSimples,cor:'#f5a623'},{label:'MEI',data:smMei,cor:'#26c6da'}]);
+    if(imgCompras)doc.addImage(imgCompras,'JPEG',margin,y+6,imgW,imgH);
+    y+=imgH+26;
+
+    if(y+imgH+24>pageH-margin){doc.addPage();y=margin;}
+    doc.text('ICMS Não Creditado',margin,y);
+    const imgNc=_pdfChartImageSM([{label:'Simples Nacional',data:smNcSimples,cor:'#f5a623'},{label:'MEI',data:smNcMei,cor:'#26c6da'}]);
+    if(imgNc)doc.addImage(imgNc,'JPEG',margin,y+6,imgW,imgH);
     y+=imgH+28;
 
     const{lista:forn,outrosQtd:fOutQtd,outrosValor:fOutVal}=_aprCombinarFornecedoresSM(per);
