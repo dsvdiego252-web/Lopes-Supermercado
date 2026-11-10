@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#090b0f;--surface:#0f1319;--surface2:#141a24;--border:#1c2438;--border2:#243050;
@@ -1178,7 +1179,7 @@ tfoot td{
       </div>
 
       <div class="apr-section">
-        <div class="apr-section-hd"><div class="apr-section-title">Compras Simples Nacional &amp; MEI</div><div class="apr-section-sub">consolidado do grupo, sem quebra por loja</div></div>
+        <div class="apr-section-hd"><div class="apr-section-title">Compras Simples Nacional &amp; MEI</div><div class="apr-section-sub">consolidado do grupo, sem quebra por loja</div><button class="act-btn" id="apr-sm-pdf-btn" onclick="gerarPdfSimplesMei()">📄 Gerar PDF</button></div>
         <div class="charts-row">
           <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#f5a623"></div>Compras <span class="apr-pct" style="font-weight:400">— clique na coluna para ver os fornecedores</span></div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-simplesmei"></canvas></div><div id="apr-just-sm-compras" class="apr-just-card" style="display:none"></div></div>
           <div class="chart-card" style="flex:1"><div class="chart-title"><div class="cdot" style="background:#ef5350"></div>ICMS Não Creditado <span class="apr-pct" style="font-weight:400">— clique na coluna para ver os produtos</span></div><div style="height:190px;position:relative"><canvas id="apr-ch-icms-naocred"></canvas></div><div id="apr-just-sm-naocred" class="apr-just-card" style="display:none"></div></div>
@@ -2340,6 +2341,130 @@ function _capturarPrint(captureId,btnId,labelId,prefixo){
 }
 function capturarResumoImpostos(){_capturarPrint('resumo-capture','resumo-print-btn','resumo-periodo-label','Resumo_Impostos');}
 function capturarProjecaoImpostos(){_capturarPrint('projecao-capture','projecao-print-btn','projecao-periodo-label','Resumo_Projecao_Impostos');}
+
+// ── PDF: Compras Simples Nacional & MEI ─────────────────────────────────
+// Junta os fornecedores do Simples Nacional e do MEI do mês informado,
+// ordenados por valor (maior primeiro).
+function _aprCombinarFornecedoresSM(per){
+  const s=(SIMPLES_MEI[per]&&SIMPLES_MEI[per].fornecedores_simples)||{top:[],outrosQtd:0,outrosValor:0};
+  const m=(SIMPLES_MEI[per]&&SIMPLES_MEI[per].fornecedores_mei)||{top:[],outrosQtd:0,outrosValor:0};
+  const lista=[
+    ...(s.top||[]).map(f=>({nome:f.nome,valor:f.valor,regime:'Simples Nacional',produtos:f.produtos||[]})),
+    ...(m.top||[]).map(f=>({nome:f.nome,valor:f.valor,regime:'MEI',produtos:f.produtos||[]})),
+  ].sort((a,b)=>b.valor-a.valor);
+  return{lista,outrosQtd:(s.outrosQtd||0)+(m.outrosQtd||0),outrosValor:(s.outrosValor||0)+(m.outrosValor||0)};
+}
+// Soma os produtos comprados de cada fornecedor da lista acima num ranking único.
+function _aprProdutosDeFornecedoresSM(lista){
+  const mapa={};
+  lista.forEach(f=>(f.produtos||[]).forEach(p=>{mapa[p.produto]=(mapa[p.produto]||0)+p.valor;}));
+  return Object.entries(mapa).map(([produto,valor])=>({produto,valor})).sort((a,b)=>b.valor-a.valor);
+}
+// Desenha um título + tabela simples no PDF, paginando quando necessário. Retorna o novo y.
+function _pdfTabelaSM(doc,margin,y,pageW,pageH,titulo,cols,colW,rows,nota){
+  const rowH=15;
+  if(y+34>pageH-margin){doc.addPage();y=margin;}
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(20);
+  doc.text(titulo,margin,y);y+=16;
+  doc.setFontSize(8.5);
+  doc.setFillColor(235,235,235);
+  doc.rect(margin,y-10,pageW-margin*2,rowH,'F');
+  let x=margin;
+  cols.forEach((c,i)=>{doc.text(c,i===cols.length-1?x+colW[i]-4:x+4,y,i===cols.length-1?{align:'right'}:undefined);x+=colW[i];});
+  y+=rowH;
+  doc.setFont('helvetica','normal');
+  if(!rows.length){doc.setTextColor(110);doc.text('Sem dados para este mês.',margin,y);doc.setTextColor(20);y+=rowH;}
+  rows.forEach((r,idx)=>{
+    if(y+rowH>pageH-margin){doc.addPage();y=margin;}
+    if(idx%2===1){doc.setFillColor(247,247,247);doc.rect(margin,y-10,pageW-margin*2,rowH,'F');}
+    let x=margin;
+    r.forEach((val,i)=>{
+      const w=colW[i],isUltima=i===r.length-1,maxW=w-8;
+      let shown=String(val);
+      if(doc.getTextWidth(shown)>maxW){
+        while(shown.length>1&&doc.getTextWidth(shown+'…')>maxW)shown=shown.slice(0,-1);
+        shown+='…';
+      }
+      if(isUltima)doc.text(shown,x+w-4,y,{align:'right'});
+      else doc.text(shown,x+4,y);
+      x+=w;
+    });
+    y+=rowH;
+  });
+  if(nota){
+    if(y+rowH>pageH-margin){doc.addPage();y=margin;}
+    doc.setFontSize(7.5);doc.setTextColor(130);
+    doc.text(nota,margin,y);doc.setTextColor(20);
+    y+=rowH;
+  }
+  return y+12;
+}
+// Gera um PDF com os gráficos totais de Compras/ICMS Não Creditado (Simples Nacional
+// & MEI) e, do último mês disponível, os valores por fornecedor e depois por produto.
+function gerarPdfSimplesMei(){
+  const btn=document.getElementById('apr-sm-pdf-btn');
+  if(typeof window.jspdf==='undefined'){
+    alert('Não foi possível carregar o recurso de geração de PDF. Verifique a conexão com a internet e tente novamente.');
+    return;
+  }
+  const n=PERIODOS.length;
+  if(!n){alert('Sem dados para gerar o PDF.');return;}
+  const idx=n-1,per=PERIODOS[idx];
+  const mesLbl=LABELS[idx]+'/'+per.split('-')[0];
+  const original=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='⏳ Gerando...';}
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'pt',format:'a4'});
+    const pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight();
+    const margin=40;
+    let y=margin;
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(20);
+    doc.text('Lopes Supermercado',margin,y);y+=20;
+    doc.setFontSize(13);
+    doc.text('Compras Simples Nacional & MEI',margin,y);y+=16;
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(100);
+    doc.text('Gráficos: consolidado do grupo, '+LABELS[0]+'/'+PERIODOS[0].split('-')[0]+' a '+mesLbl+'  ·  Tabelas: '+mesLbl,margin,y);
+    doc.setTextColor(20);
+    y+=22;
+
+    const chCompras=typeof _CH!=='undefined'?_CH['apr-ch-icms-simplesmei']:null;
+    const chNc=typeof _CH!=='undefined'?_CH['apr-ch-icms-naocred']:null;
+    const imgW=(pageW-margin*2-16)/2,imgH=imgW*0.62;
+    doc.setFontSize(10);doc.setFont('helvetica','bold');
+    if(chCompras){
+      doc.text('Compras',margin,y);
+      doc.addImage(chCompras.toBase64Image(),'PNG',margin,y+6,imgW,imgH);
+    }
+    if(chNc){
+      doc.text('ICMS Não Creditado',margin+imgW+16,y);
+      doc.addImage(chNc.toBase64Image(),'PNG',margin+imgW+16,y+6,imgW,imgH);
+    }
+    y+=imgH+28;
+
+    const{lista:forn,outrosQtd:fOutQtd,outrosValor:fOutVal}=_aprCombinarFornecedoresSM(per);
+    const colFW=[pageW-margin*2-200,110,90];
+    y=_pdfTabelaSM(doc,margin,y,pageW,pageH,'Valores por Fornecedor — '+mesLbl,
+      ['Fornecedor','Regime','Valor'],colFW,
+      forn.map(f=>[f.nome,f.regime,BRL(f.valor)]),
+      fOutQtd>0?('+ '+fOutQtd+' outros fornecedores, totalizando '+BRL(fOutVal)+'.'):null);
+
+    const prod=_aprProdutosDeFornecedoresSM(forn);
+    const colPW=[pageW-margin*2-90,90];
+    y=_pdfTabelaSM(doc,margin,y,pageW,pageH,'Valores por Produto — '+mesLbl,
+      ['Produto','Valor'],colPW,
+      prod.map(p=>[p.produto,BRL(p.valor)]),
+      null);
+
+    const perArq=mesLbl.replace(/[^a-zA-Z0-9]+/g,'_');
+    doc.save('Compras_SimplesNacional_MEI_'+perArq+'.pdf');
+  }catch(e){
+    console.error(e);
+    alert('Não foi possível gerar o PDF.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=original;}
+  }
+}
 
 // ── RESUMO PROJEÇÃO (extrapola o mês vigente pelos dias já lançados) ───────────
 function _periodoAtualReal(){
