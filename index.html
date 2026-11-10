@@ -2399,6 +2399,60 @@ function _pdfTabelaSM(doc,margin,y,pageW,pageH,titulo,cols,colW,rows,nota){
   }
   return y+12;
 }
+// Cor usada para o nome do fornecedor na tabela "Fornecedor — Produto", pra diferenciar
+// visualmente da descrição do produto (que fica na cor padrão do texto).
+const PDF_FORNECEDOR_COR=[180,95,20];
+// Tabela "Fornecedor — Produto" do PDF: como a linha mistura duas cores no mesmo texto,
+// tem desenho próprio (não reaproveita _pdfTabelaSM). rows: [{fornecedor,produto,valor}].
+function _pdfTabelaProdutosSM(doc,margin,y,pageW,pageH,titulo,rows,nota){
+  const rowH=15;
+  const colW=[pageW-margin*2-90,90];
+  if(y+34>pageH-margin){doc.addPage();y=margin;}
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(20);
+  doc.text(titulo,margin,y);y+=16;
+  doc.setFontSize(8.5);
+  doc.setFillColor(235,235,235);
+  doc.rect(margin,y-10,pageW-margin*2,rowH,'F');
+  doc.text('Fornecedor - Produto',margin+4,y);
+  doc.text('Valor',margin+colW[0]+colW[1]-4,y,{align:'right'});
+  y+=rowH;
+  doc.setFont('helvetica','normal');
+  if(!rows.length){doc.setTextColor(110);doc.text('Sem dados para este mês.',margin,y);doc.setTextColor(20);y+=rowH;}
+  const sepW=doc.getTextWidth('-')+6;
+  rows.forEach((r,idx)=>{
+    if(y+rowH>pageH-margin){doc.addPage();y=margin;}
+    if(idx%2===1){doc.setFillColor(247,247,247);doc.rect(margin,y-10,pageW-margin*2,rowH,'F');}
+    const maxW=colW[0]-8;
+    let forn=r.fornecedor,prod=r.produto;
+    if(doc.getTextWidth(forn)+sepW+doc.getTextWidth(prod)>maxW){
+      while(prod.length>0&&doc.getTextWidth(forn)+sepW+doc.getTextWidth(prod+'…')>maxW)prod=prod.slice(0,-1);
+      if(prod.length>0)prod+='…';
+      while(!prod&&forn.length>1&&doc.getTextWidth(forn+'…')>maxW)forn=forn.slice(0,-1);
+      if(!prod&&doc.getTextWidth(forn+'…')<=maxW)forn+='…';
+    }
+    let x=margin+4;
+    doc.setTextColor(...PDF_FORNECEDOR_COR);
+    doc.text(forn,x,y);
+    x+=doc.getTextWidth(forn)+3;
+    doc.setTextColor(150);
+    if(prod){
+      doc.text('-',x,y);
+      x+=doc.getTextWidth('-')+3;
+      doc.setTextColor(20);
+      doc.text(prod,x,y);
+    }
+    doc.setTextColor(20);
+    doc.text(BRL(r.valor),margin+colW[0]+colW[1]-4,y,{align:'right'});
+    y+=rowH;
+  });
+  if(nota){
+    if(y+rowH>pageH-margin){doc.addPage();y=margin;}
+    doc.setFontSize(7.5);doc.setTextColor(130);
+    doc.text(nota,margin,y);doc.setTextColor(20);
+    y+=rowH;
+  }
+  return y+12;
+}
 // Gera um PDF com os gráficos totais de Compras/ICMS Não Creditado (Simples Nacional
 // & MEI) e, do último mês disponível, os valores por fornecedor e depois por produto.
 // Preenche o canvas de branco antes do desenho (exportado como JPEG, sem transparência).
@@ -2507,11 +2561,7 @@ function gerarPdfSimplesMei(){
       fOutQtd>0?('+ '+fOutQtd+' outros fornecedores, totalizando '+BRL(fOutVal)+'.'):null);
 
     const prod=_aprProdutosDeFornecedoresSM(forn);
-    const colPW=[pageW-margin*2-90,90];
-    y=_pdfTabelaSM(doc,margin,y,pageW,pageH,'Valores por Produto — '+mesLbl,
-      ['Produto','Valor'],colPW,
-      prod.map(p=>[p.fornecedor+' — '+p.produto,BRL(p.valor)]),
-      null);
+    y=_pdfTabelaProdutosSM(doc,margin,y,pageW,pageH,'Valores por Produto — '+mesLbl,prod,null);
 
     const perArq=mesLbl.replace(/[^a-zA-Z0-9]+/g,'_');
     doc.save('Compras_SimplesNacional_MEI_'+perArq+'.pdf');
